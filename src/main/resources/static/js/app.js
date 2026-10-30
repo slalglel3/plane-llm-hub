@@ -7,23 +7,66 @@ new Vue({
     selectedModel: null,
     activeSubTab: 'OVERVIEW',
     viewMode: 'model', // 'model' | 'dashboard' | 'leaderboard'
-    currentRailView: 'models',
+    
+    // Rail Navigation state: 'c' by default as requested
+    currentRailView: 'c', // 'favorites' | 'c' | 'i' | 'f' | 'o' | 'C' | 'I' | 'F' | 'O'
+    
+    // Tree Flyout state
+    hoveredCategory: null,
+    flyoutTop: 120,
+    flyoutTimer: null,
+
+    // Favorites state
+    favoriteKeys: ['claude-3-7-sonnet', 'gpt-4o', 'deepseek-r1'],
+
     searchKeyword: '',
     stats: {},
     showNavModal: false,
 
     // Ask Pi / AI Advisor State
     aiQuery: '',
-    aiFocus: 'All Frontier Models',
-    aiFocusOptions: ['All Frontier Models', 'Coding & Agents', 'Math & Reasoning', 'High-Speed / Low-Cost', 'Open Weights / On-Premise'],
+    aiFocus: 'c-TTTM All Models',
+    aiFocusOptions: ['c-TTTM All Models', 'Coding & Agents', 'Math & Reasoning', 'High-Speed / Low-Cost', 'Open Weights / On-Premise'],
     aiFocusIndex: 0,
     aiAnswer: ''
   },
   computed: {
+    currentRailTitle() {
+      const titles = {
+        'favorites': '즐겨찾기',
+        'c': 'c-TTTM',
+        'i': 'i-TTTM',
+        'f': 'fdc-TTTM',
+        'o': 'output-TTTM',
+        'C': 'C-TTTM',
+        'I': 'I-TTTM',
+        'F': 'F-TTTM',
+        'O': 'O-TTTM'
+      };
+      return titles[this.currentRailView] || 'c-TTTM';
+    },
+
+    filteredCategories() {
+      if (!this.searchKeyword.trim()) {
+        return this.categories;
+      }
+      const kw = this.searchKeyword.toLowerCase();
+      return this.categories.filter(c => {
+        const matchCat = c.name.toLowerCase().includes(kw) || (c.tagline && c.tagline.toLowerCase().includes(kw));
+        const matchModel = c.models && c.models.some(m => m.name.toLowerCase().includes(kw) || m.tagline.toLowerCase().includes(kw));
+        return matchCat || matchModel;
+      });
+    },
+
+    favoriteModels() {
+      return this.allModels.filter(m => this.favoriteKeys.includes(m.modelKey));
+    },
+
     currentSubContent() {
       if (!this.selectedModel || !this.selectedModel.contents) return null;
       return this.selectedModel.contents.find(c => c.subMenuType === this.activeSubTab);
     },
+
     renderedMarkdown() {
       if (!this.currentSubContent || !this.currentSubContent.contentBody) return '';
       try {
@@ -32,6 +75,7 @@ new Vue({
         return this.currentSubContent.contentBody;
       }
     },
+
     renderedAiAnswer() {
       if (!this.aiAnswer) return '';
       try {
@@ -66,7 +110,7 @@ new Vue({
         const statsRes = await fetch('/api/stats');
         this.stats = await statsRes.json();
 
-        // 4. Default selection: First model (GPT-4o or Claude 3.7 Sonnet)
+        // 4. Default selection: First model (Claude 3.7 Sonnet or GPT-4o)
         if (this.allModels.length > 0) {
           const defaultKey = 'claude-3-7-sonnet';
           const exists = this.allModels.find(m => m.modelKey === defaultKey);
@@ -77,13 +121,50 @@ new Vue({
       }
     },
 
+    selectRailItem(railKey) {
+      this.currentRailView = railKey;
+      if (railKey === 'favorites') {
+        this.viewMode = 'dashboard';
+      } else if (railKey === 'c') {
+        if (!this.selectedModel && this.allModels.length > 0) {
+          this.selectModel(this.allModels[0].modelKey);
+        }
+      }
+    },
+
+    showCategoryFlyout(cat, event) {
+      if (this.flyoutTimer) {
+        clearTimeout(this.flyoutTimer);
+        this.flyoutTimer = null;
+      }
+      if (event && event.currentTarget) {
+        const rect = event.currentTarget.getBoundingClientRect();
+        // Keep within viewport height
+        this.flyoutTop = Math.max(12, Math.min(rect.top - 12, window.innerHeight - 380));
+      }
+      this.hoveredCategory = cat;
+    },
+
+    hideCategoryFlyout() {
+      if (this.flyoutTimer) clearTimeout(this.flyoutTimer);
+      this.flyoutTimer = setTimeout(() => {
+        this.hoveredCategory = null;
+      }, 180);
+    },
+
+    keepCategoryFlyout() {
+      if (this.flyoutTimer) {
+        clearTimeout(this.flyoutTimer);
+        this.flyoutTimer = null;
+      }
+    },
+
     async selectModel(modelKey) {
       this.viewMode = 'model';
       try {
         const res = await fetch(`/api/models/${modelKey}`);
         if (res.ok) {
           this.selectedModel = await res.json();
-          // Keep active subtab or default to OVERVIEW
           if (!this.activeSubTab) {
             this.activeSubTab = 'OVERVIEW';
           }
@@ -96,29 +177,54 @@ new Vue({
       }
     },
 
+    async selectModelAndTab(modelKey, tabKey) {
+      this.hoveredCategory = null;
+      this.activeSubTab = tabKey;
+      await this.selectModel(modelKey);
+    },
+
+    isCurrentModelAndTab(modelKey, tabKey) {
+      return this.selectedModel && this.selectedModel.modelKey === modelKey && this.activeSubTab === tabKey;
+    },
+
+    getSubTabTitle(tabKey) {
+      const titles = {
+        'OVERVIEW': '소개 및 개요',
+        'USAGE': '주요 특징 & 사용법',
+        'PROS_CONS': '장단점 비교',
+        'BENCHMARKS': '벤치마크 및 스펙',
+        'LINKS': '공식 연결 링크'
+      };
+      return titles[tabKey] || tabKey;
+    },
+
+    isFavorite(modelKey) {
+      return this.favoriteKeys.includes(modelKey);
+    },
+
+    toggleFavorite(model) {
+      if (!model) return;
+      const idx = this.favoriteKeys.indexOf(model.modelKey);
+      if (idx >= 0) {
+        this.favoriteKeys.splice(idx, 1);
+      } else {
+        this.favoriteKeys.push(model.modelKey);
+      }
+    },
+
     selectDashboardView() {
       this.viewMode = 'dashboard';
+      this.hoveredCategory = null;
     },
 
     selectLeaderboardView() {
       this.viewMode = 'leaderboard';
-    },
-
-    focusPiAdvisor() {
-      const textarea = document.querySelector('.plane-ai-textarea');
-      if (textarea) {
-        textarea.focus();
-      }
+      this.hoveredCategory = null;
     },
 
     cycleAiFocus() {
       this.aiFocusIndex = (this.aiFocusIndex + 1) % this.aiFocusOptions.length;
       this.aiFocus = this.aiFocusOptions[this.aiFocusIndex];
-    },
-
-    setAiPrompt(prompt) {
-      this.aiQuery = prompt;
-      this.askAiAdvisor();
     },
 
     askAiAdvisor() {
@@ -136,25 +242,19 @@ new Vue({
       } else if (q.includes('사내') || q.includes('폐쇄망') || q.includes('오픈소스') || q.includes('로컬')) {
         answer = `**🔒 사내 폐쇄망 & 온프레미스 최적 추천: Llama 3.3 70B & DeepSeek-R1**\n\n- **범용 엔터프라이즈**: Meta의 **Llama 3.3 70B Instruct** (405B급 지능을 70B 단일 노드 GPU에 경량화)\n- **심층 추론/분석**: **DeepSeek-R1 (671B / 경량 증류 모델 14B~32B)** (vLLM, Ollama 즉시 연동 가능)\n- **보안 이점**: 외부 네트워크 트래픽 0%, 완전 자체 호스팅 가능.`;
       } else {
-        answer = `**💡 LLM Hub 어드바이저 분석 결과**\n\n- 현재 질의하신 내용과 관련하여 **${this.selectedModel ? this.selectedModel.name : 'Claude 3.7 Sonnet'}** 및 **Gemini 2.0 Flash**를 비교 검토하시는 것을 추천합니다.\n- 상단의 **[⚖️ 장단점 비교]** 및 **[📊 벤치마크 및 스펙]** 탭을 클릭하시면 더 구체적인 정량 지표를 확인하실 수 있습니다.`;
+        answer = `**💡 c-TTTM 어드바이저 안내**\n\n- 현재 질의하신 내용과 관련하여 **${this.selectedModel ? this.selectedModel.name : 'Claude 3.7 Sonnet'}** 및 **Gemini 2.0 Flash**를 비교 검토하시는 것을 추천합니다.\n- 좌측 2번째 메뉴의 대메뉴(OpenAI, Anthropic 등) 위에 마우스를 올리시면 횡방향 모델 목록 및 종방향 서브메뉴(개요, 사용법, 장단점, 벤치마크, 링크)를 바로 탐색하실 수 있습니다.`;
       }
 
       this.aiAnswer = answer;
     },
 
     async onSearch() {
-      if (!this.searchKeyword.trim()) {
-        const res = await fetch('/api/models');
-        this.allModels = await res.json();
-        return;
-      }
-      const res = await fetch(`/api/search?q=${encodeURIComponent(this.searchKeyword)}`);
-      this.allModels = await res.json();
+      // In tree mode, filteredCategories computed property handles real-time filtering
     },
 
     async refreshData() {
       await this.initData();
-      alert('API 동기화가 완료되었습니다.');
+      alert('API 및 최신 모델 동기화가 완료되었습니다.');
     },
 
     highlightCodeBlocks() {

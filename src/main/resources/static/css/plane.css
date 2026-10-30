@@ -38,6 +38,7 @@ body {
   display: flex;
   width: 100vw;
   height: 100vh;
+  position: relative;
 }
 
 /* 1. Left Icon Rail (Plane Far Left Rail) */
@@ -64,7 +65,7 @@ body {
   justify-content: center;
   font-weight: 700;
   font-size: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 14px;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
 }
@@ -72,7 +73,7 @@ body {
 .plane-rail-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
   align-items: center;
 }
@@ -110,9 +111,59 @@ body {
   border-radius: 0 4px 4px 0;
 }
 
-.plane-rail-item svg {
-  width: 20px;
-  height: 20px;
+/* Star Icon (즐겨찾기) */
+.plane-rail-star {
+  color: #94a3b8;
+  transition: color 0.15s, transform 0.15s;
+}
+.plane-rail-item:hover .plane-rail-star,
+.plane-rail-item.active .plane-rail-star {
+  color: #fbbf24;
+  transform: scale(1.15);
+}
+
+/* Custom Tooltip on Hover */
+.plane-rail-item .plane-tooltip {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  left: 54px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #0f172a;
+  color: #ffffff;
+  padding: 5px 11px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 999;
+  pointer-events: none;
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
+.plane-rail-item .plane-tooltip::before {
+  content: '';
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 5px solid transparent;
+  border-right-color: #0f172a;
+}
+
+.plane-rail-item:hover .plane-tooltip {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(-50%) translateX(2px);
+}
+
+.plane-rail-letter {
+  font-family: 'JetBrains Mono', Consolas, Monaco, monospace;
+  font-size: 16px;
+  font-weight: 700;
 }
 
 .plane-rail-bottom {
@@ -149,6 +200,7 @@ body {
   height: 100%;
   overflow-y: auto;
   user-select: none;
+  position: relative;
 }
 
 .plane-sidebar-header {
@@ -224,7 +276,7 @@ body {
   border-color: var(--plane-accent);
 }
 
-/* Sidebar Sections */
+/* Sidebar Section Titles & Lists */
 .plane-nav-section {
   padding: 8px 12px;
 }
@@ -252,16 +304,17 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 7px 10px;
+  padding: 8px 12px;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 13.5px;
   color: var(--plane-text-muted);
   cursor: pointer;
   transition: all 0.12s ease;
   font-weight: 500;
+  position: relative;
 }
 
-.plane-nav-item:hover {
+.plane-nav-item:hover, .plane-nav-item.flyout-active {
   background-color: #e2e8f0;
   color: var(--plane-text-main);
 }
@@ -274,25 +327,24 @@ body {
 
 .plane-nav-item .icon {
   font-size: 15px;
-  width: 18px;
+  width: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.plane-nav-badge {
+.plane-nav-item .chevron {
   margin-left: auto;
-  font-size: 10px;
-  padding: 2px 6px;
-  border-radius: 10px;
-  background-color: #e2e8f0;
-  color: var(--plane-text-muted);
-  font-weight: 600;
+  width: 14px;
+  height: 14px;
+  color: #94a3b8;
+  transition: transform 0.15s;
 }
 
-.plane-nav-item.active .plane-nav-badge {
-  background-color: #dbeafe;
+.plane-nav-item:hover .chevron,
+.plane-nav-item.flyout-active .chevron {
   color: var(--plane-accent);
+  transform: translateX(2px);
 }
 
 .plane-sidebar-footer {
@@ -315,7 +367,140 @@ body {
   cursor: pointer;
 }
 
-/* 3. Main Workspace Area */
+/* 3. Tree Mega-Menu Flyout (Portal directly to the right of Sidebar) */
+.plane-tree-flyout-portal {
+  position: fixed;
+  background: #ffffff;
+  border: 1px solid var(--plane-border);
+  border-radius: 12px;
+  box-shadow: 0 20px 40px -6px rgba(15, 23, 42, 0.18), 0 4px 12px rgba(0, 0, 0, 0.06);
+  padding: 20px 24px;
+  z-index: 200;
+  min-width: 560px;
+  max-width: 900px;
+  animation: flyoutSlide 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes flyoutSlide {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.plane-flyout-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--plane-border);
+}
+
+.plane-flyout-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--plane-text-main);
+}
+
+.plane-flyout-tagline {
+  font-size: 12px;
+  color: var(--plane-text-muted);
+}
+
+/* Horizontal Models Row (횡방향 나열) */
+.plane-flyout-models-row {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+
+/* Individual Model Column */
+.plane-flyout-model-col {
+  flex: 1;
+  min-width: 240px;
+  background: #f8fafc;
+  border: 1px solid var(--plane-border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  transition: all 0.15s ease;
+}
+
+.plane-flyout-model-col:hover {
+  border-color: #93c5fd;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+  background: #ffffff;
+}
+
+.plane-flyout-model-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.plane-flyout-model-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--plane-text-main);
+}
+
+.plane-flyout-model-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 12px;
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+/* Vertical Sub-menus under each Model (종방향 나열) */
+.plane-flyout-submenu-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 10px;
+}
+
+.plane-flyout-submenu-item {
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  color: #475569;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.12s ease;
+}
+
+.plane-flyout-submenu-item:hover {
+  background: var(--plane-accent-light);
+  color: var(--plane-accent);
+  font-weight: 600;
+  transform: translateX(3px);
+}
+
+.plane-flyout-submenu-item.current {
+  background: var(--plane-accent-light);
+  color: var(--plane-accent);
+  font-weight: 700;
+}
+
+/* 4. Main Workspace Area */
 .plane-main {
   flex: 1;
   display: flex;
@@ -394,7 +579,33 @@ body {
   background-color: #fbfcfd;
 }
 
-/* Ask Pi / LLM Advisor Box (Matches Mobbin Screenshot 1) */
+/* Placeholder for non-c rail views */
+.plane-module-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.plane-module-icon-large {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 48px;
+  font-weight: 800;
+  width: 90px;
+  height: 90px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.12);
+}
+
+/* Ask Pi / LLM Advisor Box */
 .plane-ai-advisor {
   background: #ffffff;
   border: 1px solid var(--plane-border);
@@ -818,7 +1029,7 @@ body {
   color: var(--plane-text-subtle);
 }
 
-/* Modal Window (Customize Navigation - Matches Mobbin Screenshot 4) */
+/* Modal Window */
 .plane-modal-overlay {
   position: fixed;
   top: 0;
@@ -830,7 +1041,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  z-index: 300;
 }
 
 .plane-modal-content {

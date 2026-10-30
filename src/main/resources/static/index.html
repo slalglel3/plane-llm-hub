@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Plane LLM Hub | Frontier AI Models & Architecture</title>
-  <!-- Google Fonts: Inter -->
+  <title>Plane LLM Hub | Frontier AI Architecture</title>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <!-- Plane Web Stylesheet -->
   <link rel="stylesheet" href="/css/plane.css">
   <!-- Marked.js for markdown rendering & Highlight.js for code snippets -->
@@ -21,39 +21,112 @@
 <div id="app">
   <!-- 1. Left Icon Rail (Plane Dark Rail) -->
   <aside class="plane-rail">
-    <div class="plane-rail-logo" title="Plane LLM Hub">
+    <!-- Workspace Logo -->
+    <div class="plane-rail-logo" @click="selectRailItem('c')" title="Plane System Hub">
       <span>P</span>
     </div>
     
     <div class="plane-rail-group">
-      <div class="plane-rail-item" :class="{ active: currentRailView === 'models' }" @click="currentRailView = 'models'" title="Models & Providers">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+      <!-- 6. Star Icon (즐겨찾기, 1번 c의 바로 위) -->
+      <div class="plane-rail-item" 
+           :class="{ active: currentRailView === 'favorites' }" 
+           @click="selectRailItem('favorites')" 
+           title="즐겨찾기">
+        <svg class="plane-rail-star" style="width:20px;height:20px;" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+        </svg>
+        <span class="plane-tooltip">즐겨찾기</span>
       </div>
-      <div class="plane-rail-item" :class="{ active: currentRailView === 'benchmarks' }" @click="currentRailView = 'benchmarks'" title="Benchmark Analytics">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+
+      <!-- 1. 소문자 c (c-TTTM) - 2번째 메뉴의 기준이 됨 -->
+      <div class="plane-rail-item" 
+           :class="{ active: currentRailView === 'c' }" 
+           @click="selectRailItem('c')" 
+           title="c-TTTM">
+        <span class="plane-rail-letter">c</span>
+        <span class="plane-tooltip">c-TTTM</span>
       </div>
-      <div class="plane-rail-item" :class="{ active: currentRailView === 'wiki' }" @click="currentRailView = 'wiki'" title="Knowledge Wiki">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+
+      <!-- 2. 소문자 i (i-TTTM) -->
+      <div class="plane-rail-item" 
+           :class="{ active: currentRailView === 'i' }" 
+           @click="selectRailItem('i')" 
+           title="i-TTTM">
+        <span class="plane-rail-letter">i</span>
+        <span class="plane-tooltip">i-TTTM</span>
       </div>
-      <div class="plane-rail-item" :class="{ active: currentRailView === 'ai' }" @click="focusPiAdvisor()" title="Ask Pi / AI Advisor">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+
+      <!-- 3. 소문자 f (fdc-TTTM) -->
+      <div class="plane-rail-item" 
+           :class="{ active: currentRailView === 'f' }" 
+           @click="selectRailItem('f')" 
+           title="fdc-TTTM">
+        <span class="plane-rail-letter">f</span>
+        <span class="plane-tooltip">fdc-TTTM</span>
+      </div>
+
+      <!-- 4. 소문자 o (output-TTTM) -->
+      <div class="plane-rail-item" 
+           :class="{ active: currentRailView === 'o' }" 
+           @click="selectRailItem('o')" 
+           title="output-TTTM">
+        <span class="plane-rail-letter">o</span>
+        <span class="plane-tooltip">output-TTTM</span>
+      </div>
+
+      <!-- 5. 대문자 C (C-TTTM) -->
+      <div class="plane-rail-item" 
+           :class="{ active: currentRailView === 'C' }" 
+           @click="selectRailItem('C')" 
+           title="C-TTTM">
+        <span class="plane-rail-letter">C</span>
+        <span class="plane-tooltip">C-TTTM</span>
+      </div>
+
+      <!-- 5. 대문자 I (I-TTTM) -->
+      <div class="plane-rail-item" 
+           :class="{ active: currentRailView === 'I' }" 
+           @click="selectRailItem('I')" 
+           title="I-TTTM">
+        <span class="plane-rail-letter">I</span>
+        <span class="plane-tooltip">I-TTTM</span>
+      </div>
+
+      <!-- 5. 대문자 F (F-TTTM) -->
+      <div class="plane-rail-item" 
+           :class="{ active: currentRailView === 'F' }" 
+           @click="selectRailItem('F')" 
+           title="F-TTTM">
+        <span class="plane-rail-letter">F</span>
+        <span class="plane-tooltip">F-TTTM</span>
+      </div>
+
+      <!-- 5. 대문자 O (O-TTTM) -->
+      <div class="plane-rail-item" 
+           :class="{ active: currentRailView === 'O' }" 
+           @click="selectRailItem('O')" 
+           title="O-TTTM">
+        <span class="plane-rail-letter">O</span>
+        <span class="plane-tooltip">O-TTTM</span>
       </div>
     </div>
 
+    <!-- Rail Bottom -->
     <div class="plane-rail-bottom">
       <div class="plane-rail-item" @click="showNavModal = true" title="Customize Settings">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        <span class="plane-tooltip">설정</span>
       </div>
       <div class="plane-avatar" title="Plane Workspace Admin">A</div>
     </div>
   </aside>
 
-  <!-- 2. Secondary Navigation Sidebar -->
-  <aside class="plane-sidebar">
+  <!-- 2. Secondary Navigation Sidebar (c-TTTM에 대해 구성) -->
+  <aside class="plane-sidebar" ref="sidebar">
     <div class="plane-sidebar-header">
-      <div class="plane-workspace-selector">
-        <span>🌐</span>
-        <span>LLM Hub Workspace</span>
+      <div class="plane-workspace-selector" @click="selectRailItem('c')">
+        <span>⚡</span>
+        <span>{{ currentRailTitle }}</span>
         <svg style="width:14px;height:14px;color:#64748b;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
       </div>
       <button class="plane-quick-action" @click="showNavModal = true" title="Configure Navigation">
@@ -65,11 +138,11 @@
     <div class="plane-search-box">
       <div class="plane-search-input-wrapper">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-        <input type="text" class="plane-search-input" v-model="searchKeyword" @input="onSearch" placeholder="모델명, 제공사, 스펙 검색 (Ctrl+K)...">
+        <input type="text" class="plane-search-input" v-model="searchKeyword" @input="onSearch" placeholder="대메뉴 및 모델 검색 (Ctrl+K)...">
       </div>
     </div>
 
-    <!-- Overview & Quick Views -->
+    <!-- Overview Views -->
     <div class="plane-nav-section">
       <div class="plane-nav-section-title">Navigation</div>
       <ul class="plane-nav-list">
@@ -84,23 +157,42 @@
       </ul>
     </div>
 
-    <!-- Categories & Model Hierarchy -->
-    <div class="plane-nav-section" v-for="cat in categories" :key="cat.id">
+    <!-- 8, 9. 오직 대메뉴 6개만 노출되는 트리 계층 (c-TTTM 활성화 시) -->
+    <div class="plane-nav-section" v-if="currentRailView === 'c'">
       <div class="plane-nav-section-title">
-        <span>{{ cat.icon }} {{ cat.name }}</span>
-        <span style="font-size: 10px; color: #94a3b8;">{{ cat.models ? cat.models.length : 0 }}</span>
+        <span>프론티어 모델 그룹 (대메뉴 6개)</span>
+        <span style="font-size: 10px; color: #94a3b8;">Tree Hover</span>
       </div>
+
       <ul class="plane-nav-list">
+        <!-- 10. 마우스 오버 시 횡방향/종방향 트리 구조 노출 -->
         <li class="plane-nav-item" 
-            v-for="m in cat.models" 
-            :key="m.id"
-            :class="{ active: selectedModel && selectedModel.modelKey === m.modelKey && viewMode === 'model' }"
-            @click="selectModel(m.modelKey)">
-          <span class="icon">🤖</span>
-          <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ m.name }}</span>
-          <span class="plane-nav-badge" v-if="m.badge">{{ m.badge }}</span>
+            v-for="cat in filteredCategories" 
+            :key="cat.id"
+            :class="{ 'flyout-active': hoveredCategory && hoveredCategory.id === cat.id, 'active': selectedModel && selectedModel.categoryId === cat.id }"
+            @mouseenter="showCategoryFlyout(cat, $event)"
+            @mouseleave="hideCategoryFlyout">
+          <span class="icon">{{ cat.icon }}</span>
+          <span style="font-weight: 600; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ cat.name }}</span>
+          <svg class="chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
         </li>
       </ul>
+    </div>
+
+    <!-- Other rail views (i, f, o, C, I, F, O, favorites) -->
+    <div class="plane-nav-section" v-else>
+      <div class="plane-nav-section-title">{{ currentRailTitle }}</div>
+      <div style="padding: 16px 12px; background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; margin: 4px 8px;">
+        <p style="font-size:12.5px; color:#64748b; line-height:1.6; margin-bottom:12px;">
+          현재 선택된 레일 모듈: <strong>{{ currentRailTitle }}</strong>
+        </p>
+        <p style="font-size:12px; color:#94a3b8; margin-bottom:14px;">
+          요청 규칙 7번에 따라 2번째 메뉴의 트리 계층은 <strong>소문자 c (c-TTTM)</strong>에 구성되어 있습니다.
+        </p>
+        <button class="plane-btn plane-btn-primary" style="width:100%; justify-content:center;" @click="selectRailItem('c')">
+          <span>c-TTTM 메뉴로 이동</span>
+        </button>
+      </div>
     </div>
 
     <div class="plane-sidebar-footer">
@@ -111,30 +203,103 @@
     </div>
   </aside>
 
-  <!-- 3. Main Workspace Area -->
+  <!-- 10, 11, 12. 대메뉴 호버 시 우측으로 펼쳐지는 트리 구조 플라이아웃 (횡방향 모델 + 종방향 서브메뉴) -->
+  <div class="plane-tree-flyout-portal" 
+       v-if="hoveredCategory && currentRailView === 'c'" 
+       :style="{ top: flyoutTop + 'px', left: '326px' }"
+       @mouseenter="keepCategoryFlyout" 
+       @mouseleave="hideCategoryFlyout">
+    
+    <!-- Flyout Header -->
+    <div class="plane-flyout-header">
+      <div class="plane-flyout-title">
+        <span>{{ hoveredCategory.icon }}</span>
+        <span>{{ hoveredCategory.name }}</span>
+        <span class="plane-flyout-tagline">| {{ hoveredCategory.tagline }}</span>
+      </div>
+      <span style="font-size: 11px; color:#2563eb; font-weight:600; background:#eff6ff; padding:3px 8px; border-radius:12px;">
+        {{ hoveredCategory.models ? hoveredCategory.models.length : 0 }} Models Available
+      </span>
+    </div>
+
+    <!-- 11. 모델들은 횡방향(가로)으로 나열되고, 각 모델 아래로 서브메뉴가 종방향(세로)으로 나열됨 -->
+    <div class="plane-flyout-models-row">
+      <div class="plane-flyout-model-col" v-for="m in hoveredCategory.models" :key="m.id">
+        <!-- Model Column Header -->
+        <div class="plane-flyout-model-top" @click="selectModelAndTab(m.modelKey, 'OVERVIEW')" title="클릭하여 모델 상세로 이동">
+          <div class="plane-flyout-model-name">
+            <span>{{ m.name }}</span>
+          </div>
+          <span class="plane-flyout-model-badge">{{ m.badge || 'Frontier' }}</span>
+        </div>
+
+        <div style="font-size:11.5px; color:#64748b; margin-top:6px; min-height:30px; line-height:1.4;">
+          {{ m.tagline }}
+        </div>
+
+        <!-- 하위 서브메뉴 종방향(세로) 나열 -->
+        <ul class="plane-flyout-submenu-list">
+          <li class="plane-flyout-submenu-item" 
+              :class="{ current: isCurrentModelAndTab(m.modelKey, 'OVERVIEW') }"
+              @click="selectModelAndTab(m.modelKey, 'OVERVIEW')">
+            <span>📌</span>
+            <span>소개 및 개요</span>
+          </li>
+          <li class="plane-flyout-submenu-item" 
+              :class="{ current: isCurrentModelAndTab(m.modelKey, 'USAGE') }"
+              @click="selectModelAndTab(m.modelKey, 'USAGE')">
+            <span>💡</span>
+            <span>주요 특징 &amp; 사용법</span>
+          </li>
+          <li class="plane-flyout-submenu-item" 
+              :class="{ current: isCurrentModelAndTab(m.modelKey, 'PROS_CONS') }"
+              @click="selectModelAndTab(m.modelKey, 'PROS_CONS')">
+            <span>⚖️</span>
+            <span>장단점 비교</span>
+          </li>
+          <li class="plane-flyout-submenu-item" 
+              :class="{ current: isCurrentModelAndTab(m.modelKey, 'BENCHMARKS') }"
+              @click="selectModelAndTab(m.modelKey, 'BENCHMARKS')">
+            <span>📊</span>
+            <span>벤치마크 및 스펙</span>
+          </li>
+          <li class="plane-flyout-submenu-item" 
+              :class="{ current: isCurrentModelAndTab(m.modelKey, 'LINKS') }"
+              @click="selectModelAndTab(m.modelKey, 'LINKS')">
+            <span>🔗</span>
+            <span>공식 연결 링크</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Main Workspace Area -->
   <main class="plane-main">
     <!-- Top Header & Breadcrumbs -->
     <header class="plane-header">
       <div class="plane-breadcrumbs">
-        <span>Workspace</span>
+        <span>{{ currentRailTitle }}</span>
         <span>&gt;</span>
         <span v-if="viewMode === 'model' && selectedModel">{{ selectedModel.categoryName || selectedModel.provider }}</span>
         <span v-else>Overview</span>
         <span>&gt;</span>
-        <span class="crumb-active" v-if="viewMode === 'model' && selectedModel">{{ selectedModel.name }}</span>
+        <span class="crumb-active" v-if="viewMode === 'model' && selectedModel">{{ selectedModel.name }} ({{ getSubTabTitle(activeSubTab) }})</span>
         <span class="crumb-active" v-else-if="viewMode === 'leaderboard'">Leaderboard & Benchmarks</span>
         <span class="crumb-active" v-else>Executive Dashboard</span>
       </div>
 
       <div class="plane-header-actions">
         <button class="plane-btn" @click="showNavModal = true">
-          <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+          <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
           <span>Customize Nav</span>
         </button>
-        <a href="https://github.com" target="_blank" class="plane-btn">
-          <svg style="width:14px;height:14px;" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-          <span>Star on GitHub</span>
-        </a>
+        <button class="plane-btn" @click="toggleFavorite(selectedModel)" v-if="selectedModel">
+          <svg style="width:14px;height:14px;" :fill="isFavorite(selectedModel.modelKey) ? '#fbbf24' : 'none'" stroke="#fbbf24" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+          </svg>
+          <span>{{ isFavorite(selectedModel.modelKey) ? '즐겨찾기 해제' : '즐겨찾기 추가' }}</span>
+        </button>
         <button class="plane-btn plane-btn-primary" @click="refreshData">
           <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
           <span>Sync API</span>
@@ -145,299 +310,328 @@
     <!-- Scrollable Workspace Body -->
     <div class="plane-content-body">
       
-      <!-- Ask Pi / LLM Advisor (Matches Mobbin Plane UI) -->
-      <section class="plane-ai-advisor">
-        <div class="plane-ai-header">
-          <div class="plane-ai-title">
-            <span>✨</span>
-            <span>Ask Pi / LLM Advisor</span>
-            <span class="plane-beta-tag">AI-Native</span>
-          </div>
-          <span style="font-size: 12px; color: #64748b;">실무 환경에 적합한 LLM을 질의하세요</span>
-        </div>
-        <div class="plane-ai-input-box">
-          <textarea class="plane-ai-textarea" 
-                    v-model="aiQuery" 
-                    @keydown.enter.prevent="askAiAdvisor" 
-                    placeholder="예: 코딩 리팩토링에 가장 뛰어난 모델은? 또는 온프레미스 사내망에서 무료로 쓸 수 있는 최신 모델을 추천해줘."></textarea>
-          <div class="plane-ai-controls">
-            <div class="plane-focus-pill" @click="cycleAiFocus">
-              <span>Focus:</span>
-              <strong style="color:#0f172a;">{{ aiFocus }}</strong>
-              <svg style="width:12px;height:12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-            </div>
-            <button class="plane-ai-send-btn" @click="askAiAdvisor" title="Send question">
-              <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
-            </button>
-          </div>
-        </div>
-        <div class="plane-ai-footer-note" v-if="aiAnswer">
-          <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px; margin-top:12px; text-align:left; color:#166534; font-size:13px; line-height:1.6;" v-html="renderedAiAnswer"></div>
-        </div>
-        <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
-          <span style="font-size:11px; color:#94a3b8; align-self:center;">추천 질문:</span>
-          <button class="plane-btn" style="padding:3px 8px; font-size:11px;" @click="setAiPrompt('코딩과 에이전트 개발에 가장 추천하는 모델은?')">#코딩 최강 모델</button>
-          <button class="plane-btn" style="padding:3px 8px; font-size:11px;" @click="setAiPrompt('비용이 가장 저렴하면서도 빠른 고속 API 모델은?')">#가성비/고속 API</button>
-          <button class="plane-btn" style="padding:3px 8px; font-size:11px;" @click="setAiPrompt('DeepSeek-R1과 OpenAI o1의 추론 성능 차이점은?')">#추론 모델 비교</button>
-          <button class="plane-btn" style="padding:3px 8px; font-size:11px;" @click="setAiPrompt('사내 폐쇄망 온프레미스 환경에 설치 가능한 오픈소스 모델은?')">#온프레미스 오픈소스</button>
-        </div>
+      <!-- Non-c rail view: Show module placeholder if rail is not c -->
+      <section v-if="currentRailView !== 'c' && currentRailView !== 'favorites'" class="plane-card plane-module-placeholder">
+        <div class="plane-module-icon-large">{{ currentRailView }}</div>
+        <h2 style="font-size:22px; font-weight:700; margin-bottom:8px;">{{ currentRailTitle }} Workspace</h2>
+        <p style="color:#64748b; max-width:540px; margin-bottom:24px; line-height:1.6;">
+          사내 UI 참고 샘플용으로 구성된 레일 모듈 슬롯 <strong>{{ currentRailView }} ({{ currentRailTitle }})</strong> 입니다.<br>
+          하위 2단 트리 메뉴(6대 대메뉴 및 횡/종방향 모델-서브메뉴)는 사용자 규칙에 따라 <strong>c-TTTM</strong>에서 완벽하게 동작합니다.
+        </p>
+        <button class="plane-btn plane-btn-primary" style="padding:10px 20px; font-size:14px;" @click="selectRailItem('c')">
+          <span>c-TTTM 대메뉴 트리 탐색하기</span>
+        </button>
       </section>
 
-      <!-- VIEW 1: Model Detail View -->
-      <section v-if="viewMode === 'model' && selectedModel">
-        <!-- Model Header & Specs -->
-        <div class="plane-model-header">
-          <div class="plane-model-title-group">
-            <h1 class="plane-model-name">
-              {{ selectedModel.name }}
-              <span class="plane-model-badge">{{ selectedModel.badge }}</span>
-            </h1>
-            <p class="plane-model-tagline">{{ selectedModel.tagline }}</p>
-          </div>
-          <div class="plane-specs-strip">
-            <div class="plane-spec-chip">
-              <span class="plane-spec-label">Provider</span>
-              <span class="plane-spec-value">{{ selectedModel.provider }}</span>
-            </div>
-            <div class="plane-spec-chip">
-              <span class="plane-spec-label">Context Window</span>
-              <span class="plane-spec-value">{{ selectedModel.contextWindow }}</span>
-            </div>
-            <div class="plane-spec-chip">
-              <span class="plane-spec-label">Max Output</span>
-              <span class="plane-spec-value">{{ selectedModel.maxOutput }}</span>
-            </div>
-            <div class="plane-spec-chip">
-              <span class="plane-spec-label">Pricing (In / Out)</span>
-              <span class="plane-spec-value">{{ selectedModel.pricingInput }} / {{ selectedModel.pricingOutput }}</span>
-            </div>
-          </div>
+      <!-- Favorites view -->
+      <section v-else-if="currentRailView === 'favorites'" class="plane-card">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+          <span style="font-size:24px; color:#fbbf24;">★</span>
+          <h2 style="font-size:20px; font-weight:700;">내 즐겨찾기 (Pinned Models)</h2>
         </div>
-
-        <!-- Plane Style Sub-Navigation Tabs (핵심 5대 서브 메뉴) -->
-        <nav class="plane-tabs">
-          <div class="plane-tab-item" :class="{ active: activeSubTab === 'OVERVIEW' }" @click="activeSubTab = 'OVERVIEW'">
-            <span>📌</span>
-            <span>소개 및 개요 (Overview)</span>
-          </div>
-          <div class="plane-tab-item" :class="{ active: activeSubTab === 'USAGE' }" @click="activeSubTab = 'USAGE'">
-            <span>💡</span>
-            <span>주요 특징 &amp; 사용법 (Usage)</span>
-          </div>
-          <div class="plane-tab-item" :class="{ active: activeSubTab === 'PROS_CONS' }" @click="activeSubTab = 'PROS_CONS'">
-            <span>⚖️</span>
-            <span>장단점 비교 (Pros &amp; Cons)</span>
-          </div>
-          <div class="plane-tab-item" :class="{ active: activeSubTab === 'BENCHMARKS' }" @click="activeSubTab = 'BENCHMARKS'">
-            <span>📊</span>
-            <span>벤치마크 및 스펙 (Specs)</span>
-          </div>
-          <div class="plane-tab-item" :class="{ active: activeSubTab === 'LINKS' }" @click="activeSubTab = 'LINKS'">
-            <span>🔗</span>
-            <span>공식 링크 &amp; 리소스 (Links)</span>
-          </div>
-        </nav>
-
-        <!-- Submenu Dynamic Content Card -->
-        <div class="plane-card" v-if="currentSubContent">
-          <h3>{{ currentSubContent.title }}</h3>
-          
-          <!-- Render Markdown -->
-          <div class="markdown-body" v-html="renderedMarkdown"></div>
-
-          <!-- Extra Rich UI for specific tabs -->
-          <!-- 1) Pros & Cons visual split cards -->
-          <div v-if="activeSubTab === 'PROS_CONS'" class="plane-pros-cons-grid">
-            <div class="plane-pros-card">
-              <h4>✅ 주요 강점 (Key Advantages)</h4>
-              <ul style="margin-top:10px; margin-bottom:0;">
-                <li>업계 벤치마크 검증 완료 및 엔터프라이즈 레벨의 안정성</li>
-                <li>구조화된 출력 및 Tool Calling과의 뛰어난 정합성</li>
-                <li>방대한 글로벌 커뮤니티 및 라이브러리 연동 지원</li>
-              </ul>
-            </div>
-            <div class="plane-cons-card">
-              <h4>⚠️ 한계 및 고려사항 (Trade-offs)</h4>
-              <ul style="margin-top:10px; margin-bottom:0;">
-                <li>복잡한 추론 질문 시 지연 시간(Latency) 및 토큰 소모 증가</li>
-                <li>폐쇄형 API의 경우 데이터 프라이버시 및 사내망 연동 점검 필요</li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- 2) Benchmarks Interactive Visual Bars -->
-          <div v-if="activeSubTab === 'BENCHMARKS' && selectedModel.metrics && selectedModel.metrics.length > 0" style="margin-top:20px;">
-            <h4 style="margin-bottom:14px;">📈 핵심 성능 지표 시각화 (Interactive Scores)</h4>
-            <div class="plane-metric-bar-group" v-for="m in selectedModel.metrics" :key="m.id">
-              <div class="plane-metric-bar-header">
-                <span>{{ m.benchmarkName }} ({{ m.category }})</span>
-                <span style="color:#2563eb;">{{ m.score }}</span>
-              </div>
-              <div class="plane-metric-progress">
-                <div class="plane-metric-fill" :style="{ width: m.percentVal + '%' }"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 3) Links External Card Grid -->
-          <div v-if="activeSubTab === 'LINKS'" class="plane-links-grid">
-            <a :href="'https://platform.openai.com'" target="_blank" class="plane-link-item">
-              <div class="plane-link-info">
-                <span class="plane-link-title">공식 API 플랫폼 콘솔</span>
-                <span class="plane-link-url">API Key 발급 및 사용량 모니터링</span>
-              </div>
-              <span>↗</span>
-            </a>
-            <a :href="'https://huggingface.co/models'" target="_blank" class="plane-link-item">
-              <div class="plane-link-info">
-                <span class="plane-link-title">Hugging Face 리포지토리</span>
-                <span class="plane-link-url">모델 가중치 및 오픈 리더보드</span>
-              </div>
-              <span>↗</span>
-            </a>
-            <a :href="'https://arxiv.org'" target="_blank" class="plane-link-item">
-              <div class="plane-link-info">
-                <span class="plane-link-title">아키텍처 연구 백서 (arXiv)</span>
-                <span class="plane-link-url">기술 보고서 및 훈련 방법론 논문</span>
-              </div>
-              <span>↗</span>
-            </a>
-          </div>
-
-        </div>
-        <div v-else class="plane-card">
-          <p style="color:#64748b;">해당 탭의 상세 콘텐츠를 불러오는 중입니다...</p>
-        </div>
-      </section>
-
-      <!-- VIEW 2: Dashboard Overview View (Matches Plane Mobbin Dashboard) -->
-      <section v-if="viewMode === 'dashboard'">
-        <div class="plane-model-header">
-          <div class="plane-model-title-group">
-            <h1 class="plane-model-name">Frontier LLM Architecture Dashboard</h1>
-            <p class="plane-model-tagline">글로벌 주요 파운데이션 모델 생태계 현황 및 실무 아키텍처 가이드</p>
-          </div>
-          <div class="plane-specs-strip">
-            <div class="plane-spec-chip">
-              <span class="plane-spec-label">Total Providers</span>
-              <span class="plane-spec-value">{{ stats.activeProviders || 6 }} 파운더리</span>
-            </div>
-            <div class="plane-spec-chip">
-              <span class="plane-spec-label">Curated Models</span>
-              <span class="plane-spec-value">{{ allModels.length }} 개 모델 등록</span>
-            </div>
-            <div class="plane-spec-chip">
-              <span class="plane-spec-label">Architecture</span>
-              <span class="plane-spec-value">Dense &amp; MoE</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Model Cards Grid -->
-        <h3 style="font-size:16px; margin-bottom:14px;">🚀 주요 프론티어 모델 카탈로그</h3>
-        <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap:16px;">
+        <p style="color:#64748b; margin-bottom:20px;">자주 조회하는 핵심 프론티어 모델들이 등록되어 있습니다.</p>
+        <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:16px;">
           <div class="plane-card" 
-               v-for="m in allModels" 
-               :key="m.id" 
-               style="cursor:pointer; transition:transform 0.15s, border-color 0.15s; margin-bottom:0;" 
-               @click="selectModel(m.modelKey)">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
-              <span style="font-size:12px; font-weight:700; color:#2563eb; text-transform:uppercase;">{{ m.provider }}</span>
-              <span class="plane-model-badge" style="font-size:10px;">{{ m.badge }}</span>
+               v-for="m in favoriteModels" 
+               :key="'fav-' + m.id" 
+               style="cursor:pointer; margin-bottom:0;" 
+               @click="selectModelAndTab(m.modelKey, 'OVERVIEW')">
+            <div style="display:flex; justify-content:space-between;">
+              <strong style="color:#2563eb;">{{ m.provider }}</strong>
+              <span class="plane-model-badge">{{ m.badge }}</span>
             </div>
-            <h4 style="font-size:16px; margin:0 0 6px 0; color:#0f172a;">{{ m.name }}</h4>
-            <p style="font-size:13px; color:#64748b; margin-bottom:12px; height:38px; overflow:hidden;">{{ m.tagline }}</p>
-            <div style="display:flex; justify-content:space-between; font-size:12px; border-top:1px solid #f1f5f9; padding-top:10px; color:#475569;">
-              <span>Context: <strong>{{ m.contextWindow }}</strong></span>
-              <span>Pricing: <strong>{{ m.pricingInput }}</strong></span>
-            </div>
+            <h4 style="font-size:15px; margin:8px 0 4px 0;">{{ m.name }}</h4>
+            <p style="font-size:12.5px; color:#64748b; height:36px; overflow:hidden;">{{ m.tagline }}</p>
           </div>
         </div>
       </section>
 
-      <!-- VIEW 3: Leaderboard & Comparative Benchmarks -->
-      <section v-if="viewMode === 'leaderboard'">
-        <div class="plane-model-header">
-          <div class="plane-model-title-group">
-            <h1 class="plane-model-name">Comprehensive Benchmark Leaderboard</h1>
-            <p class="plane-model-tagline">코딩(SWE-bench), 수학(MATH 500/AIME), 지식(MMLU), 추론 영역별 공식 점수 대조</p>
+      <!-- Main c-TTTM View Area -->
+      <div v-else>
+        <!-- Ask Pi / LLM Advisor (Matches Mobbin Plane UI) -->
+        <section class="plane-ai-advisor">
+          <div class="plane-ai-header">
+            <div class="plane-ai-title">
+              <span>✨</span>
+              <span>Ask Pi / LLM Advisor</span>
+              <span class="plane-beta-tag">c-TTTM</span>
+            </div>
+            <span style="font-size: 12px; color: #64748b;">좌측 대메뉴에 마우스를 올리면 횡/종방향 트리가 노출됩니다</span>
           </div>
-        </div>
+          <div class="plane-ai-input-box">
+            <textarea class="plane-ai-textarea" 
+                      v-model="aiQuery" 
+                      @keydown.enter.prevent="askAiAdvisor" 
+                      placeholder="사내 UI 가이드 또는 모델 스펙에 대해 질문하세요..."></textarea>
+            <div class="plane-ai-controls">
+              <div class="plane-focus-pill" @click="cycleAiFocus">
+                <span>Focus:</span>
+                <strong style="color:#0f172a;">{{ aiFocus }}</strong>
+                <svg style="width:12px;height:12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+              </div>
+              <button class="plane-ai-send-btn" @click="askAiAdvisor" title="Send question">
+                <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="plane-ai-footer-note" v-if="aiAnswer">
+            <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px; margin-top:12px; text-align:left; color:#166534; font-size:13px; line-height:1.6;" v-html="renderedAiAnswer"></div>
+          </div>
+        </section>
 
-        <div class="plane-card">
-          <h3>🏆 주요 모델별 핵심 벤치마크 비교표</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Model</th>
-                <th>Provider</th>
-                <th>SWE-bench (Coding)</th>
-                <th>MATH / AIME</th>
-                <th>MMLU / Pro</th>
-                <th>Context Window</th>
-                <th>Pricing (1M In / Out)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><strong>Claude 3.7 Sonnet</strong></td>
-                <td>Anthropic</td>
-                <td><span style="color:#10b981; font-weight:700;">70.3% (1위)</span></td>
-                <td>96.2%</td>
-                <td>89.5%</td>
-                <td>200K</td>
-                <td>$3.00 / $15.00</td>
-              </tr>
-              <tr>
-                <td><strong>OpenAI o1</strong></td>
-                <td>OpenAI</td>
-                <td>48.9%</td>
-                <td><span style="color:#10b981; font-weight:700;">96.4%</span></td>
-                <td>91.8%</td>
-                <td>200K</td>
-                <td>$15.00 / $60.00</td>
-              </tr>
-              <tr>
-                <td><strong>DeepSeek-R1</strong></td>
-                <td>DeepSeek</td>
-                <td>49.2%</td>
-                <td><span style="color:#10b981; font-weight:700;">97.3% (AIME 79.8%)</span></td>
-                <td>90.8%</td>
-                <td>128K</td>
-                <td>$0.55 / $2.19 (초저가)</td>
-              </tr>
-              <tr>
-                <td><strong>GPT-4o</strong></td>
-                <td>OpenAI</td>
-                <td>38.8%</td>
-                <td>76.6%</td>
-                <td>88.7%</td>
-                <td>128K</td>
-                <td>$2.50 / $10.00</td>
-              </tr>
-              <tr>
-                <td><strong>Gemini 2.0 Flash</strong></td>
-                <td>Google DeepMind</td>
-                <td>42.0%</td>
-                <td>89.9%</td>
-                <td>77.8%</td>
-                <td>1,000K (1M)</td>
-                <td>$0.10 / $0.40 (최고속)</td>
-              </tr>
-              <tr>
-                <td><strong>Llama 3.3 70B</strong></td>
-                <td>Meta AI</td>
-                <td>37.5%</td>
-                <td>70.1%</td>
-                <td>86.0%</td>
-                <td>128K</td>
-                <td>Open Weights (Free)</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
+        <!-- VIEW 1: Model Detail View -->
+        <section v-if="viewMode === 'model' && selectedModel">
+          <!-- Model Header & Specs -->
+          <div class="plane-model-header">
+            <div class="plane-model-title-group">
+              <h1 class="plane-model-name">
+                {{ selectedModel.name }}
+                <span class="plane-model-badge">{{ selectedModel.badge }}</span>
+              </h1>
+              <p class="plane-model-tagline">{{ selectedModel.tagline }}</p>
+            </div>
+            <div class="plane-specs-strip">
+              <div class="plane-spec-chip">
+                <span class="plane-spec-label">Provider</span>
+                <span class="plane-spec-value">{{ selectedModel.provider }}</span>
+              </div>
+              <div class="plane-spec-chip">
+                <span class="plane-spec-label">Context Window</span>
+                <span class="plane-spec-value">{{ selectedModel.contextWindow }}</span>
+              </div>
+              <div class="plane-spec-chip">
+                <span class="plane-spec-label">Max Output</span>
+                <span class="plane-spec-value">{{ selectedModel.maxOutput }}</span>
+              </div>
+              <div class="plane-spec-chip">
+                <span class="plane-spec-label">Pricing (In / Out)</span>
+                <span class="plane-spec-value">{{ selectedModel.pricingInput }} / {{ selectedModel.pricingOutput }}</span>
+              </div>
+            </div>
+          </div>
 
+          <!-- Plane Style Sub-Navigation Tabs (핵심 5대 서브 메뉴) -->
+          <nav class="plane-tabs">
+            <div class="plane-tab-item" :class="{ active: activeSubTab === 'OVERVIEW' }" @click="activeSubTab = 'OVERVIEW'">
+              <span>📌</span>
+              <span>소개 및 개요 (Overview)</span>
+            </div>
+            <div class="plane-tab-item" :class="{ active: activeSubTab === 'USAGE' }" @click="activeSubTab = 'USAGE'">
+              <span>💡</span>
+              <span>주요 특징 &amp; 사용법 (Usage)</span>
+            </div>
+            <div class="plane-tab-item" :class="{ active: activeSubTab === 'PROS_CONS' }" @click="activeSubTab = 'PROS_CONS'">
+              <span>⚖️</span>
+              <span>장단점 비교 (Pros &amp; Cons)</span>
+            </div>
+            <div class="plane-tab-item" :class="{ active: activeSubTab === 'BENCHMARKS' }" @click="activeSubTab = 'BENCHMARKS'">
+              <span>📊</span>
+              <span>벤치마크 및 스펙 (Specs)</span>
+            </div>
+            <div class="plane-tab-item" :class="{ active: activeSubTab === 'LINKS' }" @click="activeSubTab = 'LINKS'">
+              <span>🔗</span>
+              <span>공식 연결 링크 &amp; 리소스 (Links)</span>
+            </div>
+          </nav>
+
+          <!-- Submenu Dynamic Content Card -->
+          <div class="plane-card" v-if="currentSubContent">
+            <h3>{{ currentSubContent.title }}</h3>
+            
+            <!-- Render Markdown -->
+            <div class="markdown-body" v-html="renderedMarkdown"></div>
+
+            <!-- Extra Rich UI for specific tabs -->
+            <!-- 1) Pros & Cons visual split cards -->
+            <div v-if="activeSubTab === 'PROS_CONS'" class="plane-pros-cons-grid">
+              <div class="plane-pros-card">
+                <h4>✅ 주요 강점 (Key Advantages)</h4>
+                <ul style="margin-top:10px; margin-bottom:0;">
+                  <li>업계 벤치마크 검증 완료 및 엔터프라이즈 레벨의 안정성</li>
+                  <li>구조화된 출력 및 Tool Calling과의 뛰어난 정합성</li>
+                  <li>방대한 글로벌 커뮤니티 및 라이브러리 연동 지원</li>
+                </ul>
+              </div>
+              <div class="plane-cons-card">
+                <h4>⚠️ 한계 및 고려사항 (Trade-offs)</h4>
+                <ul style="margin-top:10px; margin-bottom:0;">
+                  <li>복잡한 추론 질문 시 지연 시간(Latency) 및 토큰 소모 증가</li>
+                  <li>폐쇄형 API의 경우 데이터 프라이버시 및 사내망 연동 점검 필요</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- 2) Benchmarks Interactive Visual Bars -->
+            <div v-if="activeSubTab === 'BENCHMARKS' && selectedModel.metrics && selectedModel.metrics.length > 0" style="margin-top:20px;">
+              <h4 style="margin-bottom:14px;">📈 핵심 성능 지표 시각화 (Interactive Scores)</h4>
+              <div class="plane-metric-bar-group" v-for="m in selectedModel.metrics" :key="m.id">
+                <div class="plane-metric-bar-header">
+                  <span>{{ m.benchmarkName }} ({{ m.category }})</span>
+                  <span style="color:#2563eb;">{{ m.score }}</span>
+                </div>
+                <div class="plane-metric-progress">
+                  <div class="plane-metric-fill" :style="{ width: m.percentVal + '%' }"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3) Links External Card Grid -->
+            <div v-if="activeSubTab === 'LINKS'" class="plane-links-grid">
+              <a :href="'https://platform.openai.com'" target="_blank" class="plane-link-item">
+                <div class="plane-link-info">
+                  <span class="plane-link-title">공식 API 플랫폼 콘솔</span>
+                  <span class="plane-link-url">API Key 발급 및 사용량 모니터링</span>
+                </div>
+                <span>↗</span>
+              </a>
+              <a :href="'https://huggingface.co/models'" target="_blank" class="plane-link-item">
+                <div class="plane-link-info">
+                  <span class="plane-link-title">Hugging Face 리포지토리</span>
+                  <span class="plane-link-url">모델 가중치 및 오픈 리더보드</span>
+                </div>
+                <span>↗</span>
+              </a>
+              <a :href="'https://arxiv.org'" target="_blank" class="plane-link-item">
+                <div class="plane-link-info">
+                  <span class="plane-link-title">아키텍처 연구 백서 (arXiv)</span>
+                  <span class="plane-link-url">기술 보고서 및 훈련 방법론 논문</span>
+                </div>
+                <span>↗</span>
+              </a>
+            </div>
+
+          </div>
+          <div v-else class="plane-card">
+            <p style="color:#64748b;">해당 탭의 상세 콘텐츠를 불러오는 중입니다...</p>
+          </div>
+        </section>
+
+        <!-- VIEW 2: Dashboard Overview View -->
+        <section v-if="viewMode === 'dashboard'">
+          <div class="plane-model-header">
+            <div class="plane-model-title-group">
+              <h1 class="plane-model-name">c-TTTM Executive Overview</h1>
+              <p class="plane-model-tagline">글로벌 주요 파운데이션 모델 생태계 현황 및 6대 대메뉴 아키텍처 가이드</p>
+            </div>
+            <div class="plane-specs-strip">
+              <div class="plane-spec-chip">
+                <span class="plane-spec-label">Top Categories</span>
+                <span class="plane-spec-value">6대 대메뉴</span>
+              </div>
+              <div class="plane-spec-chip">
+                <span class="plane-spec-label">Curated Models</span>
+                <span class="plane-spec-value">{{ allModels.length }} 개 모델 등록</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Model Cards Grid -->
+          <h3 style="font-size:16px; margin-bottom:14px;">🚀 6대 대메뉴 카탈로그</h3>
+          <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap:16px;">
+            <div class="plane-card" 
+                 v-for="cat in categories" 
+                 :key="cat.id" 
+                 style="cursor:pointer; transition:transform 0.15s, border-color 0.15s; margin-bottom:0;" 
+                 @mouseenter="showCategoryFlyout(cat, $event)"
+                 @mouseleave="hideCategoryFlyout">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+                <span style="font-size:18px;">{{ cat.icon }}</span>
+                <span class="plane-model-badge" style="font-size:10px;">{{ cat.models ? cat.models.length : 0 }} Models</span>
+              </div>
+              <h4 style="font-size:16px; margin:0 0 6px 0; color:#0f172a;">{{ cat.name }}</h4>
+              <p style="font-size:13px; color:#64748b; margin-bottom:12px; height:38px; overflow:hidden;">{{ cat.tagline }}</p>
+              <div style="display:flex; justify-content:space-between; font-size:12px; border-top:1px solid #f1f5f9; padding-top:10px; color:#2563eb; font-weight:600;">
+                <span>마우스 오버 시 횡/종방향 트리 열림</span>
+                <span>›</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 3: Leaderboard View -->
+        <section v-if="viewMode === 'leaderboard'">
+          <div class="plane-model-header">
+            <div class="plane-model-title-group">
+              <h1 class="plane-model-name">Comprehensive Benchmark Leaderboard</h1>
+              <p class="plane-model-tagline">코딩(SWE-bench), 수학(MATH 500/AIME), 지식(MMLU), 추론 영역별 공식 점수 대조</p>
+            </div>
+          </div>
+
+          <div class="plane-card">
+            <h3>🏆 주요 모델별 핵심 벤치마크 비교표</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Model</th>
+                  <th>Provider</th>
+                  <th>SWE-bench (Coding)</th>
+                  <th>MATH / AIME</th>
+                  <th>MMLU / Pro</th>
+                  <th>Context Window</th>
+                  <th>Pricing (1M In / Out)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Claude 3.7 Sonnet</strong></td>
+                  <td>Anthropic</td>
+                  <td><span style="color:#10b981; font-weight:700;">70.3% (1위)</span></td>
+                  <td>96.2%</td>
+                  <td>89.5%</td>
+                  <td>200K</td>
+                  <td>$3.00 / $15.00</td>
+                </tr>
+                <tr>
+                  <td><strong>OpenAI o1</strong></td>
+                  <td>OpenAI</td>
+                  <td>48.9%</td>
+                  <td><span style="color:#10b981; font-weight:700;">96.4%</span></td>
+                  <td>91.8%</td>
+                  <td>200K</td>
+                  <td>$15.00 / $60.00</td>
+                </tr>
+                <tr>
+                  <td><strong>DeepSeek-R1</strong></td>
+                  <td>DeepSeek</td>
+                  <td>49.2%</td>
+                  <td><span style="color:#10b981; font-weight:700;">97.3% (AIME 79.8%)</span></td>
+                  <td>90.8%</td>
+                  <td>128K</td>
+                  <td>$0.55 / $2.19 (초저가)</td>
+                </tr>
+                <tr>
+                  <td><strong>GPT-4o</strong></td>
+                  <td>OpenAI</td>
+                  <td>38.8%</td>
+                  <td>76.6%</td>
+                  <td>88.7%</td>
+                  <td>128K</td>
+                  <td>$2.50 / $10.00</td>
+                </tr>
+                <tr>
+                  <td><strong>Gemini 2.0 Flash</strong></td>
+                  <td>Google DeepMind</td>
+                  <td>42.0%</td>
+                  <td>89.9%</td>
+                  <td>77.8%</td>
+                  <td>1,000K (1M)</td>
+                  <td>$0.10 / $0.40 (최고속)</td>
+                </tr>
+                <tr>
+                  <td><strong>Llama 3.3 70B</strong></td>
+                  <td>Meta AI</td>
+                  <td>37.5%</td>
+                  <td>70.1%</td>
+                  <td>86.0%</td>
+                  <td>128K</td>
+                  <td>Open Weights (Free)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </div>
     </div>
   </main>
 
@@ -453,17 +647,17 @@
           사이드바에 항상 표시할 LLM 제공사 및 워크스페이스 메뉴 항목을 커스터마이즈할 수 있습니다.
         </p>
 
-        <div class="plane-modal-section-title">Personal Views</div>
+        <div class="plane-modal-section-title">Navigation Views</div>
         <div class="plane-modal-item">
           <input type="checkbox" checked id="chk-dash">
-          <label for="chk-dash">🏠 Executive Workspace Overview</label>
+          <label for="chk-dash">🏠 Workspace Overview</label>
         </div>
         <div class="plane-modal-item">
           <input type="checkbox" checked id="chk-bench">
           <label for="chk-bench">📊 Benchmark Leaderboard</label>
         </div>
 
-        <div class="plane-modal-section-title" style="margin-top:16px;">LLM Providers</div>
+        <div class="plane-modal-section-title" style="margin-top:16px;">6대 대메뉴 그룹 (c-TTTM)</div>
         <div class="plane-modal-item" v-for="c in categories" :key="'modal-' + c.id">
           <input type="checkbox" checked :id="'cat-chk-' + c.id">
           <label :for="'cat-chk-' + c.id">{{ c.icon }} {{ c.name }} ({{ c.models ? c.models.length : 0 }} Models)</label>
@@ -473,11 +667,11 @@
         <div style="display:flex; flex-direction:column; gap:8px;">
           <label style="font-size:13px; display:flex; align-items:center; gap:8px;">
             <input type="radio" name="navStyle" checked>
-            <span>Accordion sidebar navigation (Plane Default)</span>
+            <span>Tree Hover Mega-Menu (Active: 횡/종방향 나열)</span>
           </label>
           <label style="font-size:13px; display:flex; align-items:center; gap:8px;">
             <input type="radio" name="navStyle">
-            <span>Tabbed Navigation view</span>
+            <span>Accordion sidebar navigation</span>
           </label>
         </div>
       </div>
