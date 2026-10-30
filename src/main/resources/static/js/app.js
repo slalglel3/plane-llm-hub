@@ -598,64 +598,19 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
             <div class="plane-breadcrumbs">
               <span>{{ moduleTitle }}</span>
               <span>&gt;</span>
-              <span v-if="selectedModel">{{ selectedModel.categoryName || selectedModel.provider }}</span>
+              <span v-if="selectedModel">{{ selectedModel.name }}</span>
               <span>&gt;</span>
-              <span class="crumb-active" v-if="selectedModel">{{ selectedModel.name }} · {{ getSubTabTitle(activeSubTab) }}</span>
+              <span class="crumb-active" v-if="selectedModel">{{ getSubTabTitle(activeSubTab) }}</span>
             </div>
           </header>
 
           <div class="plane-content-body">
             <section v-if="selectedModel">
-              <div class="plane-model-header">
-                <div>
-                  <h1 class="plane-model-name">
-                    {{ selectedModel.name }}
-                    <span class="plane-model-badge">{{ selectedModel.badge }}</span>
-                  </h1>
-                  <p class="plane-model-tagline">{{ selectedModel.tagline }}</p>
-                </div>
-                <div class="plane-specs-strip">
-                  <div class="plane-spec-chip">
-                    <span class="plane-spec-label">제공사 / 분류</span>
-                    <span class="plane-spec-value">{{ selectedModel.provider }}</span>
-                  </div>
-                  <div class="plane-spec-chip">
-                    <span class="plane-spec-label">주요 규격 / 스펙</span>
-                    <span class="plane-spec-value">{{ selectedModel.contextWindow }}</span>
-                  </div>
-                  <div class="plane-spec-chip">
-                    <span class="plane-spec-label">요금 / 라이선스</span>
-                    <span class="plane-spec-value">{{ selectedModel.pricingInput }}</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Horizontal Sub-menu Tabs -->
-              <nav class="plane-tabs">
-                <div class="plane-tab-item" :class="{ active: activeSubTab === 'OVERVIEW' }" @click="activeSubTab = 'OVERVIEW'">
-                  <span>📌</span><span>소개 및 개요</span>
-                </div>
-                <div class="plane-tab-item" :class="{ active: activeSubTab === 'USAGE' }" @click="activeSubTab = 'USAGE'">
-                  <span>💡</span><span>주요 특징 &amp; 사용법</span>
-                </div>
-                <div class="plane-tab-item" :class="{ active: activeSubTab === 'BENCHMARKS' }" @click="activeSubTab = 'BENCHMARKS'">
-                  <span>📊</span><span>성능 분석 시트 (AUIGrid)</span>
-                </div>
-                <div class="plane-tab-item" :class="{ active: activeSubTab === 'CROSS_EDITOR' }" @click="activeSubTab = 'CROSS_EDITOR'">
-                  <span>📝</span><span>운영 가이드 (CrossEditor)</span>
-                </div>
-                <div class="plane-tab-item" :class="{ active: activeSubTab === 'PROS_CONS' }" @click="activeSubTab = 'PROS_CONS'">
-                  <span>⚖️</span><span>장단점 비교</span>
-                </div>
-                <div class="plane-tab-item" :class="{ active: activeSubTab === 'LINKS' }" @click="activeSubTab = 'LINKS'">
-                  <span>🔗</span><span>공식 링크</span>
-                </div>
-              </nav>
-
-              <!-- Detailed Sub-menu 1: AUIGrid Component -->
+              
+              <!-- Sub-menu 1: AUIGrid Component View -->
               <div v-if="activeSubTab === 'BENCHMARKS'" class="plane-card">
                 <div style="margin-bottom:14px;">
-                  <h3 style="font-size:15px; font-weight:700;">📊 {{ selectedModel.name }} 성능 지표 및 비교 분석</h3>
+                  <h2 style="font-size:17px; font-weight:700; color:#0f172a;">📊 {{ selectedModel.name }} - 성능 분석 시트</h2>
                   <p style="color:#64748b; font-size:12.5px; margin-top:3px;">
                     동일 카테고리 및 전체 서비스의 스펙, 릴리즈 시점, 요금제 지표를 실시간으로 비교 분석합니다.
                   </p>
@@ -663,10 +618,10 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
                 <aui-grid :title="selectedModel.name + ' 성능 분석 시트'" :columns="gridColumns" :rows="allModels" />
               </div>
 
-              <!-- Detailed Sub-menu 2: CrossEditor Component -->
+              <!-- Sub-menu 2: CrossEditor Component View -->
               <div v-else-if="activeSubTab === 'CROSS_EDITOR'" class="plane-card">
                 <div style="margin-bottom:14px;">
-                  <h3 style="font-size:15px; font-weight:700;">📝 {{ selectedModel.name }} 표준 가이드 문서</h3>
+                  <h2 style="font-size:17px; font-weight:700; color:#0f172a;">📝 {{ selectedModel.name }} - 운영 가이드 문서</h2>
                   <p style="color:#64748b; font-size:12.5px; margin-top:3px;">
                     표준 서식과 표 편집기를 활용하여 운영 및 기술 표준 문서를 편집하고 보관할 수 있습니다.
                   </p>
@@ -674,12 +629,29 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
                 <cross-editor v-model="crossEditorHtml" :title="selectedModel.name + ' 표준 운영 가이드'" />
               </div>
 
-              <!-- Detailed Sub-menus 3: Markdown Sub-menus -->
-              <div v-else-if="currentSubContent" class="plane-card">
-                <h3 style="font-size:16px; margin-bottom:12px;">{{ currentSubContent.title }}</h3>
+              <!-- Sub-menu 3: Overview Sub-menu View -->
+              <div v-else-if="activeSubTab === 'OVERVIEW'" class="plane-card">
+                <h2 style="font-size:18px; font-weight:700; color:#0f172a; margin-bottom:14px; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
+                  📌 {{ currentSubContent ? currentSubContent.title : (selectedModel.name + ' 소개 및 개요') }}
+                </h2>
                 <div class="markdown-body" v-html="renderedMarkdown"></div>
-                
-                <div v-if="activeSubTab === 'PROS_CONS'" class="plane-pros-cons-grid">
+              </div>
+
+              <!-- Sub-menu 4: Usage Sub-menu View -->
+              <div v-else-if="activeSubTab === 'USAGE'" class="plane-card">
+                <h2 style="font-size:18px; font-weight:700; color:#0f172a; margin-bottom:14px; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
+                  💡 {{ currentSubContent ? currentSubContent.title : (selectedModel.name + ' 주요 특징 & 사용법') }}
+                </h2>
+                <div class="markdown-body" v-html="renderedMarkdown"></div>
+              </div>
+
+              <!-- Sub-menu 5: Pros & Cons Sub-menu View -->
+              <div v-else-if="activeSubTab === 'PROS_CONS'" class="plane-card">
+                <h2 style="font-size:18px; font-weight:700; color:#0f172a; margin-bottom:14px; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
+                  ⚖️ {{ currentSubContent ? currentSubContent.title : (selectedModel.name + ' 장단점 비교') }}
+                </h2>
+                <div class="markdown-body" v-html="renderedMarkdown"></div>
+                <div class="plane-pros-cons-grid" style="margin-top:18px;">
                   <div class="plane-pros-card">
                     <h4>✅ 핵심 강점 (Key Advantages)</h4>
                     <p style="font-size:13px; margin-top:8px;">업계 최상위 성능 지표 및 신뢰할 수 있는 엔터프라이즈 SLA 보장.</p>
@@ -689,6 +661,21 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
                     <p style="font-size:13px; margin-top:8px;">사내 인프라 연동 시 라이선스 및 방화벽 포트 점검 필요.</p>
                   </div>
                 </div>
+              </div>
+
+              <!-- Sub-menu 6: Links Sub-menu View -->
+              <div v-else-if="activeSubTab === 'LINKS'" class="plane-card">
+                <h2 style="font-size:18px; font-weight:700; color:#0f172a; margin-bottom:14px; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
+                  🔗 {{ currentSubContent ? currentSubContent.title : (selectedModel.name + ' 공식 링크') }}
+                </h2>
+                <div class="markdown-body" v-html="renderedMarkdown"></div>
+              </div>
+
+              <div v-else-if="currentSubContent" class="plane-card">
+                <h2 style="font-size:18px; font-weight:700; color:#0f172a; margin-bottom:14px; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
+                  {{ currentSubContent.title }}
+                </h2>
+                <div class="markdown-body" v-html="renderedMarkdown"></div>
               </div>
               <div v-else class="plane-card">
                 <h3>{{ getSubTabTitle(activeSubTab) }}</h3>
