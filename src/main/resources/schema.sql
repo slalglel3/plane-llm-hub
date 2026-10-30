@@ -5,6 +5,7 @@ DROP TABLE IF EXISTS categories;
 
 CREATE TABLE categories (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    module_type VARCHAR(20) DEFAULT 'c', -- 'c', 'i', 'f', 'o'
     slug VARCHAR(50) NOT NULL UNIQUE,
     name VARCHAR(100) NOT NULL,
     icon VARCHAR(50),

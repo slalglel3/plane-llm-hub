@@ -22,7 +22,10 @@ public class LlmApiController {
     }
 
     @GetMapping("/categories")
-    public ResponseEntity<List<Category>> getCategories() {
+    public ResponseEntity<List<Category>> getCategories(@RequestParam(required = false) String module) {
+        if (module != null && !module.trim().isEmpty()) {
+            return ResponseEntity.ok(llmService.getCategoriesByModule(module));
+        }
         return ResponseEntity.ok(llmService.getAllCategories());
     }
 

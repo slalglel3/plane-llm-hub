@@ -7,6 +7,7 @@
 
     <resultMap id="CategoryResultMap" type="com.plane.llmhub.model.Category">
         <id property="id" column="id"/>
+        <result property="moduleType" column="module_type"/>
         <result property="slug" column="slug"/>
         <result property="name" column="name"/>
         <result property="icon" column="icon"/>
@@ -16,19 +17,26 @@
     </resultMap>
 
     <select id="selectAll" resultMap="CategoryResultMap">
-        SELECT id, slug, name, icon, tagline, display_order
+        SELECT id, module_type, slug, name, icon, tagline, display_order
         FROM categories
         ORDER BY display_order ASC, id ASC
     </select>
 
+    <select id="selectByModule" resultMap="CategoryResultMap">
+        SELECT id, module_type, slug, name, icon, tagline, display_order
+        FROM categories
+        WHERE module_type = #{moduleType}
+        ORDER BY display_order ASC, id ASC
+    </select>
+
     <select id="selectBySlug" resultMap="CategoryResultMap">
-        SELECT id, slug, name, icon, tagline, display_order
+        SELECT id, module_type, slug, name, icon, tagline, display_order
         FROM categories
         WHERE slug = #{slug}
     </select>
 
     <select id="selectById" resultMap="CategoryResultMap">
-        SELECT id, slug, name, icon, tagline, display_order
+        SELECT id, module_type, slug, name, icon, tagline, display_order
         FROM categories
         WHERE id = #{id}
     </select>
@@ -43,8 +51,8 @@
     </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO categories (slug, name, icon, tagline, display_order)
-        VALUES (#{slug}, #{name}, #{icon}, #{tagline}, #{displayOrder})
+        INSERT INTO categories (module_type, slug, name, icon, tagline, display_order)
+        VALUES (#{moduleType}, #{slug}, #{name}, #{icon}, #{tagline}, #{displayOrder})
     </insert>
 
 </mapper>

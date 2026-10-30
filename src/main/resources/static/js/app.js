@@ -1,292 +1,812 @@
-/* Plane LLM Hub - Vue 2 Client Application */
+/* Plane Web + AUIGrid + CrossEditor Enterprise Application (Vue 2) */
+
+// ========================================================
+// 1. Reusable Component: AUIGrid Enterprise Data Grid
+// ========================================================
+Vue.component('aui-grid', {
+  props: {
+    title: { type: String, default: 'AUIGrid Enterprise Data Sheet' },
+    columns: { type: Array, required: true },
+    rows: { type: Array, required: true }
+  },
+  data() {
+    return {
+      selectedRowIds: [],
+      selectAllChecked: false,
+      sortColumn: '',
+      sortDirection: 1, // 1: asc, -1: desc
+      filterText: '',
+      currentPage: 1,
+      pageSize: 10
+    };
+  },
+  computed: {
+    filteredRows() {
+      let list = this.rows.slice();
+      if (this.filterText.trim()) {
+        const kw = this.filterText.toLowerCase();
+        list = list.filter(r => Object.values(r).some(val => String(val).toLowerCase().includes(kw)));
+      }
+      if (this.sortColumn) {
+        list.sort((a, b) => {
+          let valA = a[this.sortColumn];
+          let valB = b[this.sortColumn];
+          if (valA === valB) return 0;
+          return (valA > valB ? 1 : -1) * this.sortDirection;
+        });
+      }
+      return list;
+    },
+    pagedRows() {
+      const start = (this.currentPage - 1) * this.pageSize;
+      return this.filteredRows.slice(start, start + this.pageSize);
+    },
+    totalPages() {
+      return Math.max(1, Math.ceil(this.filteredRows.length / this.pageSize));
+    }
+  },
+  methods: {
+    toggleSort(colKey) {
+      if (this.sortColumn === colKey) {
+        this.sortDirection = -this.sortDirection;
+      } else {
+        this.sortColumn = colKey;
+        this.sortDirection = 1;
+      }
+    },
+    toggleSelectAll() {
+      this.selectAllChecked = !this.selectAllChecked;
+      if (this.selectAllChecked) {
+        this.selectedRowIds = this.pagedRows.map((r, i) => r.id || i);
+      } else {
+        this.selectedRowIds = [];
+      }
+    },
+    toggleRowSelect(row, idx) {
+      const id = row.id || idx;
+      const pos = this.selectedRowIds.indexOf(id);
+      if (pos >= 0) {
+        this.selectedRowIds.splice(pos, 1);
+      } else {
+        this.selectedRowIds.push(id);
+      }
+    },
+    isRowSelected(row, idx) {
+      return this.selectedRowIds.includes(row.id || idx);
+    },
+    exportExcel() {
+      let csv = this.columns.map(c => `"${c.header}"`).join(',') + '\n';
+      this.filteredRows.forEach(r => {
+        csv += this.columns.map(c => `"${r[c.key] || ''}"`).join(',') + '\n';
+      });
+      const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `AUIGrid_Export_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  },
+  template: `
+    <div class="aui-grid-wrapper">
+      <div class="aui-grid-toolbar">
+        <div class="aui-grid-title">
+          <span style="color:#2563eb;">▦</span>
+          <span>{{ title }}</span>
+          <span style="font-size:11px; color:#64748b; font-weight:normal;">[AUIGrid v4.2.0 Enterprise Engine]</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <input type="text" v-model="filterText" placeholder="그리드 필터 검색..." class="plane-search-input" style="width:180px; padding:4px 8px; font-size:11.5px;">
+          <div class="aui-btn-group">
+            <button class="aui-btn aui-btn-excel" @click="exportExcel">
+              <span>📗</span> 엑셀 다운로드
+            </button>
+            <button class="aui-btn" @click="filterText = ''; sortColumn = '';">
+              <span>↺</span> 초기화
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="aui-table-container">
+        <table class="aui-table">
+          <thead>
+            <tr>
+              <th style="width:40px; text-align:center;">
+                <input type="checkbox" :checked="selectAllChecked" @change="toggleSelectAll">
+              </th>
+              <th v-for="col in columns" :key="col.key" @click="toggleSort(col.key)" :style="{ width: col.width || 'auto' }">
+                <div style="display:flex; align-items:center; justify-content:space-between;">
+                  <span>{{ col.header }}</span>
+                  <span style="font-size:9px; color:#94a3b8;">
+                    {{ sortColumn === col.key ? (sortDirection === 1 ? '▲' : '▼') : '↕' }}
+                  </span>
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(row, idx) in pagedRows" :key="row.id || idx" :class="{ selected: isRowSelected(row, idx) }">
+              <td style="text-align:center;">
+                <input type="checkbox" :checked="isRowSelected(row, idx)" @change="toggleRowSelect(row, idx)">
+              </td>
+              <td v-for="col in columns" :key="col.key">
+                <template v-if="col.badge">
+                  <span class="plane-model-badge" style="font-size:10px;">{{ row[col.key] }}</span>
+                </template>
+                <template v-else-if="col.score">
+                  <strong style="color:#2563eb;">{{ row[col.key] }}</strong>
+                </template>
+                <template v-else>
+                  {{ row[col.key] }}
+                </template>
+              </td>
+            </tr>
+            <tr v-if="pagedRows.length === 0">
+              <td :colspan="columns.length + 1" style="text-align:center; padding:30px; color:#94a3b8;">
+                조회된 그리드 데이터가 없습니다.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="aui-grid-footer">
+        <div>
+          <span>전체 <strong>{{ filteredRows.length }}</strong>건 (선택 {{ selectedRowIds.length }}건)</span>
+        </div>
+        <div class="aui-pagination">
+          <button class="aui-page-btn" :disabled="currentPage === 1" @click="currentPage = 1">|&lt;</button>
+          <button class="aui-page-btn" :disabled="currentPage === 1" @click="currentPage--">&lt;</button>
+          <button v-for="p in totalPages" :key="p" class="aui-page-btn" :class="{ active: currentPage === p }" @click="currentPage = p">{{ p }}</button>
+          <button class="aui-page-btn" :disabled="currentPage === totalPages" @click="currentPage++">&gt;</button>
+          <button class="aui-page-btn" :disabled="currentPage === totalPages" @click="currentPage = totalPages">&gt;|</button>
+        </div>
+      </div>
+    </div>
+  `
+});
+
+// ========================================================
+// 2. Reusable Component: Namo CrossEditor Enterprise WYSIWYG
+// ========================================================
+Vue.component('cross-editor', {
+  props: {
+    value: { type: String, default: '' },
+    title: { type: String, default: '사내 기술 표준 문서 편집기 (Namo CrossEditor)' }
+  },
+  data() {
+    return {
+      mode: 'design', // 'design' | 'source' | 'preview'
+      contentHtml: this.value,
+      sourceHtml: this.value,
+      tagPath: 'BODY > P > SPAN'
+    };
+  },
+  watch: {
+    value(newVal) {
+      this.contentHtml = newVal;
+      this.sourceHtml = newVal;
+    }
+  },
+  methods: {
+    exec(command, value = null) {
+      document.execCommand(command, false, value);
+      this.onCanvasInput();
+    },
+    onCanvasInput() {
+      const el = this.$refs.canvas;
+      if (el) {
+        this.contentHtml = el.innerHTML;
+        this.sourceHtml = el.innerHTML;
+        this.$emit('input', this.contentHtml);
+      }
+    },
+    switchMode(m) {
+      if (this.mode === 'design' && m === 'source') {
+        this.sourceHtml = this.$refs.canvas ? this.$refs.canvas.innerHTML : this.contentHtml;
+      } else if (this.mode === 'source' && m === 'design') {
+        this.contentHtml = this.sourceHtml;
+      }
+      this.mode = m;
+      this.$nextTick(() => {
+        if (m === 'design' && this.$refs.canvas) {
+          this.$refs.canvas.innerHTML = this.contentHtml;
+        }
+      });
+    },
+    insertTable() {
+      const tableHtml = `
+        <table border="1" cellpadding="6" style="border-collapse:collapse; width:100%; border:1px solid #cbd5e1; margin:10px 0;">
+          <tr style="background:#f8fafc;"><th>분류</th><th>항목</th><th>내용</th></tr>
+          <tr><td>표준 규격</td><td>시스템 아키텍처</td><td>사내 표준 가이드라인 준수</td></tr>
+          <tr><td>보안 등급</td><td>데이터 보호</td><td>기밀 정보 암호화 적용</td></tr>
+        </table>
+      `;
+      this.exec('insertHTML', tableHtml);
+    },
+    saveDocument() {
+      alert('CrossEditor: 본문 내용이 성공적으로 저장되었습니다.');
+      this.$emit('save', this.contentHtml);
+    }
+  },
+  template: `
+    <div class="cross-editor-wrapper">
+      <div class="cross-editor-topbar">
+        <div class="cross-editor-brand">
+          <span style="color:#2563eb;">✎</span>
+          <span>{{ title }}</span>
+          <span style="font-size:10.5px; color:#64748b; font-weight:normal;">[CrossEditor v3.5 Enterprise]</span>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button class="aui-btn" style="background:#2563eb; color:#fff; border-color:#2563eb;" @click="saveDocument">
+            <span>💾</span> 본문 저장
+          </button>
+        </div>
+      </div>
+      
+      <!-- Toolbar -->
+      <div class="cross-editor-toolbar" v-if="mode === 'design'">
+        <div class="cross-editor-tool-row">
+          <select class="cross-tool-select" @change="exec('fontName', $event.target.value)">
+            <option value="Malgun Gothic">맑은 고딕</option>
+            <option value="Dotum">돋움</option>
+            <option value="Gulim">굴림</option>
+            <option value="Arial">Arial</option>
+          </select>
+          <select class="cross-tool-select" @change="exec('fontSize', $event.target.value)">
+            <option value="2">9pt</option>
+            <option value="3" selected>11pt</option>
+            <option value="4">13pt</option>
+            <option value="5">16pt</option>
+            <option value="6">20pt</option>
+          </select>
+          <button class="cross-tool-btn" @click="exec('bold')" title="굵게"><strong>B</strong></button>
+          <button class="cross-tool-btn" @click="exec('italic')" title="기울임"><em>I</em></button>
+          <button class="cross-tool-btn" @click="exec('underline')" title="밑줄"><u>U</u></button>
+          <button class="cross-tool-btn" @click="exec('strikeThrough')" title="취소선"><s>S</s></button>
+          <button class="cross-tool-btn" @click="exec('foreColor', '#2563eb')" style="color:#2563eb;" title="글자색">A</button>
+          <button class="cross-tool-btn" @click="exec('hiliteColor', '#fef08a')" style="background:#fef08a;" title="형광펜">T</button>
+          <span style="color:#cbd5e1;">|</span>
+          <button class="cross-tool-btn" @click="exec('justifyLeft')" title="좌측정렬">≡</button>
+          <button class="cross-tool-btn" @click="exec('justifyCenter')" title="가운데정렬">⫸</button>
+          <button class="cross-tool-btn" @click="exec('justifyRight')" title="우측정렬">⫷</button>
+          <span style="color:#cbd5e1;">|</span>
+          <button class="cross-tool-btn" @click="insertTable" title="표 삽입">▦ 표 삽입</button>
+          <button class="cross-tool-btn" @click="exec('insertUnorderedList')" title="글머리 기호">• 목록</button>
+          <button class="cross-tool-btn" @click="exec('removeFormat')" title="서식 지우기">⌫ 서식제거</button>
+        </div>
+      </div>
+
+      <!-- Editor Canvas -->
+      <div v-show="mode === 'design'" 
+           ref="canvas" 
+           class="cross-editor-canvas" 
+           contenteditable="true" 
+           @input="onCanvasInput" 
+           v-html="contentHtml">
+      </div>
+      <textarea v-show="mode === 'source'" 
+                class="cross-editor-source-textarea" 
+                v-model="sourceHtml" 
+                @input="$emit('input', sourceHtml)">
+      </textarea>
+      <div v-show="mode === 'preview'" class="cross-editor-canvas" v-html="sourceHtml"></div>
+
+      <!-- Status Bar & Mode Switch -->
+      <div class="cross-editor-statusbar">
+        <div class="cross-editor-modes">
+          <button class="cross-mode-tab" :class="{ active: mode === 'design' }" @click="switchMode('design')">디자인 (Design)</button>
+          <button class="cross-mode-tab" :class="{ active: mode === 'source' }" @click="switchMode('source')">HTML 소스</button>
+          <button class="cross-mode-tab" :class="{ active: mode === 'preview' }" @click="switchMode('preview')">미리보기</button>
+        </div>
+        <div style="display:flex; gap:12px;">
+          <span>태그경로: <strong>{{ tagPath }}</strong></span>
+          <span>확대: <strong>100%</strong></span>
+        </div>
+      </div>
+    </div>
+  `
+});
+
+// ========================================================
+// 3. Factory function for Modular Rail Views (c, i, f, o / C, I, F, O)
+// ========================================================
+function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
+  return {
+    data() {
+      return {
+        moduleKey: moduleKey,
+        moduleTitle: moduleTitle,
+        moduleTagline: moduleTagline,
+        categories: [],
+        allModels: [],
+        selectedModel: null,
+        activeSubTab: 'OVERVIEW',
+        viewMode: 'model', // 'model' | 'dashboard' | 'auigrid' | 'crosseditor'
+        hoveredCategory: null,
+        flyoutTop: 120,
+        flyoutTimer: null,
+        searchKeyword: '',
+        
+        // AUIGrid Sample Columns
+        gridColumns: [
+          { header: 'ID', key: 'id', width: '60px' },
+          { header: '이름 (Name)', key: 'name', width: '180px' },
+          { header: '분류 / 제공사', key: 'provider', width: '140px' },
+          { header: '릴리즈 일자', key: 'releaseDate', width: '100px' },
+          { header: '규격 / 스펙', key: 'contextWindow', width: '120px' },
+          { header: '단가 / 요금제', key: 'pricingInput', width: '130px' },
+          { header: '태그 배지', key: 'badge', width: '100px', badge: true }
+        ],
+
+        // CrossEditor Content Model
+        crossEditorHtml: `
+          <h2 style="color:#1e293b; border-bottom:2px solid #2563eb; padding-bottom:8px;">사내 표준 기술 가이드라인 (${moduleTitle})</h2>
+          <p>본 문서는 사내 <strong>${moduleTitle}</strong> 인프라 및 도구 활용 표준 가이드를 정의합니다.</p>
+          <table border="1" cellpadding="8" style="border-collapse:collapse; width:100%; border:1px solid #cbd5e1; margin-top:12px;">
+            <tr style="background:#f1f5f9;">
+              <th>검토 항목</th>
+              <th>적용 기준</th>
+              <th>비고</th>
+            </tr>
+            <tr>
+              <td>보안 및 권한</td>
+              <td>사내 SSO 연동 및 RBAC 역할 제어</td>
+              <td>기밀 데이터 마스킹 필수</td>
+            </tr>
+            <tr>
+              <td>성능 SLA</td>
+              <td>99.9% 가용성 및 P95 지연시간 200ms 이내</td>
+              <td>AUIGrid 모니터링 연계</td>
+            </tr>
+          </table>
+          <p style="margin-top:12px;">※ 변경 사항 발생 시 CrossEditor를 통해 즉시 수정 후 배포하십시오.</p>
+        `
+      };
+    },
+    computed: {
+      filteredCategories() {
+        if (!this.searchKeyword.trim()) return this.categories;
+        const kw = this.searchKeyword.toLowerCase();
+        return this.categories.filter(c => {
+          const matchCat = c.name.toLowerCase().includes(kw);
+          const matchM = c.models && c.models.some(m => m.name.toLowerCase().includes(kw));
+          return matchCat || matchM;
+        });
+      },
+      currentSubContent() {
+        if (!this.selectedModel) return null;
+        if (this.selectedModel.contents && this.selectedModel.contents.length > 0) {
+          const found = this.selectedModel.contents.find(c => c.subMenuType === this.activeSubTab);
+          if (found) return found;
+        }
+        // Dynamic fallback generation for all items across all modules
+        const m = this.selectedModel;
+        const type = this.activeSubTab;
+        if (type === 'OVERVIEW') {
+          return {
+            title: `${m.name} 소개 및 개요`,
+            contentBody: `### ${m.name}: ${m.tagline || '핵심 서비스 및 기술 사양'}\n\n- **제공자 / 플랫폼**: ${m.provider}\n- **출시 / 등록일**: ${m.releaseDate}\n- **주요 규격 / 스펙**: ${m.contextWindow}\n- **단가 및 요금 정책**: ${m.pricingInput}\n\n${m.name}은(는) 해당 분야에서 널리 활용되는 대표적인 서비스로, 고성능 처리 엔진과 안정적인 인프라를 바탕으로 최적의 작업 효율을 제공합니다.`
+          };
+        } else if (type === 'USAGE') {
+          return {
+            title: `${m.name} 주요 특징 & 사용법`,
+            contentBody: `### ${m.name} 핵심 활용 가이드\n\n1. **환경 설정**: 공식 API 키 발급 또는 서비스 엔드포인트 등록\n2. **연동 규격**: REST API / SDK / 웹 콘솔을 통한 표준 호출\n3. **모니터링**: AUIGrid 및 사내 관제 대시보드와 지표 동기화\n\n\`\`\`bash\n# ${m.name} 표준 연동 프로토콜\ncurl -X GET "https://api.example.com/${m.modelKey}/status" \\\n     -H "Authorization: Bearer YOUR_TOKEN"\n\`\`\``
+          };
+        } else if (type === 'PROS_CONS') {
+          return {
+            title: `${m.name} 장단점 비교 분석`,
+            contentBody: `### ${m.name} 장점 및 트레이드오프\n\n#### ✅ 핵심 강점\n- **뛰어난 안정성**: 높은 SLA 가용성 및 글로벌 CDN/클러스터 분산 지원\n- **풍부한 기능**: 엔터프라이즈 업무 워크플로우에 최적화된 편의성\n- **비용 최적화**: 경쟁력 있는 단가 및 사용량 기반 탄력적 요금제 (${m.pricingInput})\n\n#### ⚠️ 유의사항 및 한계\n- 대규모 동시 요청 시 트래픽 스로틀링(Rate Limiting) 정책 준수 필요\n- 사내 망 연동 시 프록시 및 방화벽 인바운드/아웃바운드 포트 확인 필요`
+          };
+        } else if (type === 'BENCHMARKS') {
+          return {
+            title: `${m.name} 벤치마크 및 성능 지표`,
+            contentBody: `### ${m.name} 성능 데이터\n\n- 스펙 사양: **${m.contextWindow}**\n- 출력 및 응답 용량: **${m.maxOutput}**\n- 엔터프라이즈 태그: **${m.badge}**\n\n*하단의 AUIGrid 데이터 시트에서 전체 모델군과 다차원 정렬/필터 비교가 가능합니다.*`
+          };
+        } else if (type === 'LINKS') {
+          return {
+            title: `${m.name} 공식 연결 링크`,
+            contentBody: `### ${m.name} 공식 리소스\n\n- 🌐 [공식 홈페이지 및 포털](https://www.google.com/search?q=${encodeURIComponent(m.name)})\n- 📖 [개발자 및 사용자 기술 문서](https://www.google.com/search?q=${encodeURIComponent(m.name + ' docs')})\n- 💬 [커뮤니티 및 지원 센터](https://www.google.com/search?q=${encodeURIComponent(m.name + ' community')})`
+          };
+        }
+        return null;
+      },
+      renderedMarkdown() {
+        if (!this.currentSubContent || !this.currentSubContent.contentBody) return '';
+        try { return marked.parse(this.currentSubContent.contentBody); } catch (e) { return this.currentSubContent.contentBody; }
+      }
+    },
+    created() {
+      this.initData();
+    },
+    methods: {
+      async initData() {
+        try {
+          // Fetch module categories (c, i, f, o)
+          const baseModule = this.moduleKey.toLowerCase();
+          const catRes = await fetch(`/api/categories?module=${baseModule}`);
+          this.categories = await catRes.json();
+
+          // Aggregate all models in this module
+          let items = [];
+          this.categories.forEach(c => {
+            if (c.models) items.push(...c.models);
+          });
+          this.allModels = items;
+
+          // Default selection: first model
+          if (this.allModels.length > 0) {
+            await this.selectModel(this.allModels[0].modelKey);
+          }
+        } catch (err) {
+          console.error(`Error loading data for ${this.moduleKey}:`, err);
+        }
+      },
+      showCategoryFlyout(cat, event) {
+        if (this.flyoutTimer) clearTimeout(this.flyoutTimer);
+        if (event && event.currentTarget) {
+          const rect = event.currentTarget.getBoundingClientRect();
+          this.flyoutTop = Math.max(12, Math.min(rect.top - 12, window.innerHeight - 340));
+        }
+        this.hoveredCategory = cat;
+      },
+      hideCategoryFlyout() {
+        if (this.flyoutTimer) clearTimeout(this.flyoutTimer);
+        this.flyoutTimer = setTimeout(() => {
+          this.hoveredCategory = null;
+        }, 180);
+      },
+      keepCategoryFlyout() {
+        if (this.flyoutTimer) clearTimeout(this.flyoutTimer);
+      },
+      async selectModel(modelKey) {
+        this.viewMode = 'model';
+        try {
+          const res = await fetch(`/api/models/${modelKey}`);
+          if (res.ok) {
+            this.selectedModel = await res.json();
+            if (!this.activeSubTab) this.activeSubTab = 'OVERVIEW';
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      },
+      async selectModelAndTab(modelKey, tabKey) {
+        this.hoveredCategory = null;
+        this.activeSubTab = tabKey;
+        await this.selectModel(modelKey);
+      },
+      isCurrentModelAndTab(modelKey, tabKey) {
+        return this.selectedModel && this.selectedModel.modelKey === modelKey && this.activeSubTab === tabKey;
+      },
+      getSubTabTitle(tabKey) {
+        const titles = {
+          'OVERVIEW': '소개 및 개요',
+          'USAGE': '주요 특징 & 사용법',
+          'PROS_CONS': '장단점 비교',
+          'BENCHMARKS': '벤치마크 및 스펙 (AUIGrid)',
+          'LINKS': '공식 연결 링크',
+          'CROSS_EDITOR': '사내 기술문서 (CrossEditor)'
+        };
+        return titles[tabKey] || tabKey;
+      }
+    },
+    template: `
+      <div style="display:flex; width:100%; height:100%;">
+        <!-- Secondary Navigation Sidebar -->
+        <aside class="plane-sidebar">
+          <div class="plane-sidebar-header">
+            <div class="plane-workspace-selector">
+              <span>⚡</span>
+              <span>{{ moduleTitle }}</span>
+              <svg style="width:14px;height:14px;color:#64748b;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </div>
+          </div>
+
+          <!-- Quick Search -->
+          <div class="plane-search-box">
+            <div class="plane-search-input-wrapper">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              <input type="text" class="plane-search-input" v-model="searchKeyword" placeholder="대메뉴 및 항목 검색...">
+            </div>
+          </div>
+
+          <!-- Quick Mode Selectors -->
+          <div class="plane-nav-section">
+            <div class="plane-nav-section-title">Views & Tools</div>
+            <ul class="plane-nav-list">
+              <li class="plane-nav-item" :class="{ active: viewMode === 'dashboard' }" @click="viewMode = 'dashboard'; hoveredCategory = null;">
+                <span class="icon">🏠</span>
+                <span>Workspace Overview</span>
+              </li>
+              <li class="plane-nav-item" :class="{ active: viewMode === 'auigrid' }" @click="viewMode = 'auigrid'; hoveredCategory = null;">
+                <span class="icon">▦</span>
+                <span>전사 데이터 시트 (AUIGrid)</span>
+              </li>
+              <li class="plane-nav-item" :class="{ active: viewMode === 'crosseditor' }" @click="viewMode = 'crosseditor'; hoveredCategory = null;">
+                <span class="icon">✎</span>
+                <span>기술 표준 문서 (CrossEditor)</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Major Categories (대메뉴) -->
+          <div class="plane-nav-section">
+            <div class="plane-nav-section-title">
+              <span>대메뉴 리스트 ({{ filteredCategories.length }}개)</span>
+              <span style="font-size: 10px; color: #94a3b8;">4~5열 Hover</span>
+            </div>
+            <ul class="plane-nav-list">
+              <li class="plane-nav-item" 
+                  v-for="cat in filteredCategories" 
+                  :key="cat.id"
+                  :class="{ 'flyout-active': hoveredCategory && hoveredCategory.id === cat.id, 'active': selectedModel && selectedModel.categoryId === cat.id }"
+                  @mouseenter="showCategoryFlyout(cat, $event)"
+                  @mouseleave="hideCategoryFlyout">
+                <span class="icon">{{ cat.icon }}</span>
+                <span style="font-weight:600; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ cat.name }}</span>
+                <svg class="chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+              </li>
+            </ul>
+          </div>
+
+          <div class="plane-sidebar-footer">
+            <div class="plane-trial-badge">
+              <span>Spring Boot + AUIGrid Active</span>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Compact 4~5 Columns Tree Flyout (가로폭 축소, 세부설명 삭제) -->
+        <div class="plane-tree-flyout-portal" 
+             v-if="hoveredCategory" 
+             :style="{ top: flyoutTop + 'px', left: '326px' }"
+             @mouseenter="keepCategoryFlyout" 
+             @mouseleave="hideCategoryFlyout">
+          
+          <div class="plane-flyout-header">
+            <div class="plane-flyout-title">
+              <span>{{ hoveredCategory.icon }}</span>
+              <span>{{ hoveredCategory.name }}</span>
+              <span class="plane-flyout-tagline">| {{ hoveredCategory.tagline }}</span>
+            </div>
+            <span style="font-size: 11px; color:#2563eb; font-weight:600; background:#eff6ff; padding:2px 7px; border-radius:10px;">
+              {{ hoveredCategory.models ? hoveredCategory.models.length : 0 }} Columns Available
+            </span>
+          </div>
+
+          <!-- 4 ~ 5열 횡방향 나열 -->
+          <div class="plane-flyout-models-row">
+            <div class="plane-flyout-model-col" v-for="m in hoveredCategory.models" :key="m.id">
+              <div class="plane-flyout-model-top" @click="selectModelAndTab(m.modelKey, 'OVERVIEW')">
+                <span class="plane-flyout-model-name">{{ m.name }}</span>
+                <span class="plane-flyout-model-badge">{{ m.badge || 'Verified' }}</span>
+              </div>
+
+              <!-- 하위 서브메뉴 종방향 나열 -->
+              <ul class="plane-flyout-submenu-list">
+                <li class="plane-flyout-submenu-item" 
+                    :class="{ current: isCurrentModelAndTab(m.modelKey, 'OVERVIEW') }"
+                    @click="selectModelAndTab(m.modelKey, 'OVERVIEW')">
+                  <span>📌</span><span>소개 및 개요</span>
+                </li>
+                <li class="plane-flyout-submenu-item" 
+                    :class="{ current: isCurrentModelAndTab(m.modelKey, 'USAGE') }"
+                    @click="selectModelAndTab(m.modelKey, 'USAGE')">
+                  <span>💡</span><span>주요 특징 &amp; 사용법</span>
+                </li>
+                <li class="plane-flyout-submenu-item" 
+                    :class="{ current: isCurrentModelAndTab(m.modelKey, 'PROS_CONS') }"
+                    @click="selectModelAndTab(m.modelKey, 'PROS_CONS')">
+                  <span>⚖️</span><span>장단점 비교</span>
+                </li>
+                <li class="plane-flyout-submenu-item" 
+                    :class="{ current: isCurrentModelAndTab(m.modelKey, 'BENCHMARKS') }"
+                    @click="selectModelAndTab(m.modelKey, 'BENCHMARKS')">
+                  <span>📊</span><span>벤치마크 (AUIGrid)</span>
+                </li>
+                <li class="plane-flyout-submenu-item" 
+                    :class="{ current: isCurrentModelAndTab(m.modelKey, 'LINKS') }"
+                    @click="selectModelAndTab(m.modelKey, 'LINKS')">
+                  <span>🔗</span><span>공식 연결 링크</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <main class="plane-main">
+          <header class="plane-header">
+            <div class="plane-breadcrumbs">
+              <span>{{ moduleTitle }}</span>
+              <span>&gt;</span>
+              <span v-if="viewMode === 'model' && selectedModel">{{ selectedModel.categoryName || selectedModel.provider }}</span>
+              <span v-else-if="viewMode === 'auigrid'">AUIGrid 데이터 분석실</span>
+              <span v-else-if="viewMode === 'crosseditor'">CrossEditor 문서 편집기</span>
+              <span v-else>Executive Overview</span>
+              <span>&gt;</span>
+              <span class="crumb-active" v-if="viewMode === 'model' && selectedModel">{{ selectedModel.name }} ({{ getSubTabTitle(activeSubTab) }})</span>
+              <span class="crumb-active" v-else>{{ viewMode.toUpperCase() }}</span>
+            </div>
+            <div class="plane-header-actions">
+              <button class="plane-btn" :class="{ 'plane-btn-primary': viewMode === 'auigrid' }" @click="viewMode = 'auigrid'">
+                <span>▦ AUIGrid</span>
+              </button>
+              <button class="plane-btn" :class="{ 'plane-btn-primary': viewMode === 'crosseditor' }" @click="viewMode = 'crosseditor'">
+                <span>✎ CrossEditor</span>
+              </button>
+            </div>
+          </header>
+
+          <div class="plane-content-body">
+            
+            <!-- AUIGrid View Mode -->
+            <section v-if="viewMode === 'auigrid'" class="plane-card">
+              <h3>전사 데이터 분석 및 통계 (AUIGrid 연동 모드)</h3>
+              <p style="color:#64748b; font-size:13px;">사내 금융/ERP 표준 데이터 그리드 솔루션인 AUIGrid 인터페이스를 통해 대량 데이터를 다차원 정렬, 필터, 엑셀 익스포트합니다.</p>
+              <aui-grid :title="moduleTitle + ' 전체 데이터 시트'" :columns="gridColumns" :rows="allModels" />
+            </section>
+
+            <!-- CrossEditor View Mode -->
+            <section v-else-if="viewMode === 'crosseditor'" class="plane-card">
+              <h3>사내 기술 표준 문서 위지위그 편집기 (CrossEditor)</h3>
+              <p style="color:#64748b; font-size:13px;">한국 표준 나모 크로스에디터 규격의 리치 텍스트 툴바와 HTML 소스/디자인 모드 전환을 제공합니다.</p>
+              <cross-editor v-model="crossEditorHtml" :title="moduleTitle + ' 표준 가이드 에디터'" />
+            </section>
+
+            <!-- Dashboard View Mode -->
+            <section v-else-if="viewMode === 'dashboard'">
+              <div class="plane-model-header">
+                <div>
+                  <h1 class="plane-model-name">{{ moduleTitle }} Overview</h1>
+                  <p class="plane-model-tagline">{{ moduleTagline }}</p>
+                </div>
+              </div>
+              <h3 style="font-size:15px; margin-bottom:12px;">대메뉴 카탈로그</h3>
+              <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:14px;">
+                <div class="plane-card" v-for="cat in categories" :key="cat.id" style="cursor:pointer;" @click="showCategoryFlyout(cat, $event)">
+                  <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <span style="font-size:20px;">{{ cat.icon }}</span>
+                    <span class="plane-model-badge">{{ cat.models ? cat.models.length : 0 }} Items</span>
+                  </div>
+                  <h4 style="font-size:15px; margin-bottom:4px;">{{ cat.name }}</h4>
+                  <p style="font-size:12.5px; color:#64748b;">{{ cat.tagline }}</p>
+                </div>
+              </div>
+            </section>
+
+            <!-- Item Detail View Mode -->
+            <section v-else-if="viewMode === 'model' && selectedModel">
+              <div class="plane-model-header">
+                <div>
+                  <h1 class="plane-model-name">
+                    {{ selectedModel.name }}
+                    <span class="plane-model-badge">{{ selectedModel.badge }}</span>
+                  </h1>
+                  <p class="plane-model-tagline">{{ selectedModel.tagline }}</p>
+                </div>
+                <div class="plane-specs-strip">
+                  <div class="plane-spec-chip">
+                    <span class="plane-spec-label">Provider / Type</span>
+                    <span class="plane-spec-value">{{ selectedModel.provider }}</span>
+                  </div>
+                  <div class="plane-spec-chip">
+                    <span class="plane-spec-label">Capacity / Spec</span>
+                    <span class="plane-spec-value">{{ selectedModel.contextWindow }}</span>
+                  </div>
+                  <div class="plane-spec-chip">
+                    <span class="plane-spec-label">Pricing / Tier</span>
+                    <span class="plane-spec-value">{{ selectedModel.pricingInput }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Horizontal Sub-menu Tabs -->
+              <nav class="plane-tabs">
+                <div class="plane-tab-item" :class="{ active: activeSubTab === 'OVERVIEW' }" @click="activeSubTab = 'OVERVIEW'">
+                  <span>📌</span><span>소개 및 개요</span>
+                </div>
+                <div class="plane-tab-item" :class="{ active: activeSubTab === 'USAGE' }" @click="activeSubTab = 'USAGE'">
+                  <span>💡</span><span>주요 특징 &amp; 사용법</span>
+                </div>
+                <div class="plane-tab-item" :class="{ active: activeSubTab === 'PROS_CONS' }" @click="activeSubTab = 'PROS_CONS'">
+                  <span>⚖️</span><span>장단점 비교</span>
+                </div>
+                <div class="plane-tab-item" :class="{ active: activeSubTab === 'BENCHMARKS' }" @click="activeSubTab = 'BENCHMARKS'">
+                  <span>📊</span><span>벤치마크 및 스펙 (AUIGrid)</span>
+                </div>
+                <div class="plane-tab-item" :class="{ active: activeSubTab === 'LINKS' }" @click="activeSubTab = 'LINKS'">
+                  <span>🔗</span><span>공식 연결 링크</span>
+                </div>
+                <div class="plane-tab-item" :class="{ active: activeSubTab === 'CROSS_EDITOR' }" @click="activeSubTab = 'CROSS_EDITOR'">
+                  <span>✎</span><span>사내 기술문서 (CrossEditor)</span>
+                </div>
+              </nav>
+
+              <!-- Dynamic Sub-menu View -->
+              <div v-if="activeSubTab === 'BENCHMARKS'">
+                <div class="plane-card">
+                  <h3>📊 AUIGrid 데이터 뷰 ({{ selectedModel.name }} 성능 &amp; 지표)</h3>
+                  <aui-grid :title="selectedModel.name + ' 세부 지표 분석'" :columns="gridColumns" :rows="allModels" />
+                </div>
+              </div>
+
+              <div v-else-if="activeSubTab === 'CROSS_EDITOR'">
+                <div class="plane-card">
+                  <h3>✎ 사내 표준 위지위그 기술문서 (CrossEditor)</h3>
+                  <cross-editor v-model="crossEditorHtml" :title="selectedModel.name + ' 기술 표준서'" />
+                </div>
+              </div>
+
+              <div v-else-if="currentSubContent" class="plane-card">
+                <h3>{{ currentSubContent.title }}</h3>
+                <div class="markdown-body" v-html="renderedMarkdown"></div>
+                
+                <div v-if="activeSubTab === 'PROS_CONS'" class="plane-pros-cons-grid">
+                  <div class="plane-pros-card">
+                    <h4>✅ 핵심 강점 (Key Advantages)</h4>
+                    <p style="font-size:13px; margin-top:8px;">업계 최상위 성능 지표 및 신뢰할 수 있는 엔터프라이즈 SLA 보장.</p>
+                  </div>
+                  <div class="plane-cons-card">
+                    <h4>⚠️ 도입 시 고려사항 (Trade-offs)</h4>
+                    <p style="font-size:13px; margin-top:8px;">사내 인프라 연동 시 라이선스 및 방화벽 포트 점검 필요.</p>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="plane-card">
+                <h3>{{ getSubTabTitle(activeSubTab) }}</h3>
+                <p style="color:#64748b;">선택된 항목의 상세 가이드가 준비되어 있습니다.</p>
+              </div>
+
+            </section>
+          </div>
+        </main>
+      </div>
+    `
+  };
+}
+
+// ========================================================
+// 4. Register Distinct Components for c, i, f, o and C, I, F, O
+// ========================================================
+// [c & C]: LLM Foundation Models
+Vue.component('component-c', createModuleComponent('c', 'c-TTTM (Frontier LLM Hub)', '차세대 프론티어 대형 언어 모델 및 추론 아키텍처'));
+Vue.component('component-C', createModuleComponent('C', 'C-TTTM (Enterprise LLM Cluster)', '사내 전용 프라이빗 엔터프라이즈 대형 언어 모델 클러스터'));
+
+// [i & I]: Famous Internet Web Sites
+Vue.component('component-i', createModuleComponent('i', 'i-TTTM (Global Web Sites Hub)', '전 세계 주요 인터넷 포털, 이커머스, 클라우드 및 미디어'));
+Vue.component('component-I', createModuleComponent('I', 'I-TTTM (Enterprise Portal Gateway)', '사내망 프록시 및 업무용 글로벌 웹 서비스 통합 게이트웨이'));
+
+// [f & F]: Famous AI Tools
+Vue.component('component-f', createModuleComponent('f', 'fdc-TTTM (AI Tools Suite)', '코딩, 이미지, 영상, 리서치 및 생산성 AI 도구 생태계'));
+Vue.component('component-F', createModuleComponent('F', 'F-TTTM (Enterprise AI Pipeline)', '사내 승인 및 연동 엔터프라이즈 AI 자동화 파이프라인'));
+
+// [o & O]: Famous SNS & Social Networks
+Vue.component('component-o', createModuleComponent('o', 'output-TTTM (Global SNS Platforms)', '마이크로블로그, 숏폼 미디어, 메신저 및 전문 비즈니스 네트워크'));
+Vue.component('component-O', createModuleComponent('O', 'O-TTTM (Enterprise Social Mesh)', '사내 소셜 협업망 및 외부 공식 SNS 채널 통합 대시보드'));
+
+// ========================================================
+// 5. Root Vue Instance
+// ========================================================
 new Vue({
   el: '#app',
   data: {
-    categories: [],
-    allModels: [],
-    selectedModel: null,
-    activeSubTab: 'OVERVIEW',
-    viewMode: 'model', // 'model' | 'dashboard' | 'leaderboard'
-    
-    // Rail Navigation state: 'c' by default as requested
-    currentRailView: 'c', // 'favorites' | 'c' | 'i' | 'f' | 'o' | 'C' | 'I' | 'F' | 'O'
-    
-    // Tree Flyout state
-    hoveredCategory: null,
-    flyoutTop: 120,
-    flyoutTimer: null,
-
-    // Favorites state
-    favoriteKeys: ['claude-3-7-sonnet', 'gpt-4o', 'deepseek-r1'],
-
-    searchKeyword: '',
-    stats: {},
-    showNavModal: false,
-
-    // Ask Pi / AI Advisor State
-    aiQuery: '',
-    aiFocus: 'c-TTTM All Models',
-    aiFocusOptions: ['c-TTTM All Models', 'Coding & Agents', 'Math & Reasoning', 'High-Speed / Low-Cost', 'Open Weights / On-Premise'],
-    aiFocusIndex: 0,
-    aiAnswer: ''
+    currentRailView: 'c', // 'c', 'i', 'f', 'o', 'C', 'I', 'F', 'O', 'favorites'
+    showNavModal: false
   },
   computed: {
-    currentRailTitle() {
-      const titles = {
-        'favorites': '즐겨찾기',
-        'c': 'c-TTTM',
-        'i': 'i-TTTM',
-        'f': 'fdc-TTTM',
-        'o': 'output-TTTM',
-        'C': 'C-TTTM',
-        'I': 'I-TTTM',
-        'F': 'F-TTTM',
-        'O': 'O-TTTM'
-      };
-      return titles[this.currentRailView] || 'c-TTTM';
-    },
-
-    filteredCategories() {
-      if (!this.searchKeyword.trim()) {
-        return this.categories;
+    activeComponentName() {
+      if (this.currentRailView === 'favorites') {
+        return 'component-c';
       }
-      const kw = this.searchKeyword.toLowerCase();
-      return this.categories.filter(c => {
-        const matchCat = c.name.toLowerCase().includes(kw) || (c.tagline && c.tagline.toLowerCase().includes(kw));
-        const matchModel = c.models && c.models.some(m => m.name.toLowerCase().includes(kw) || m.tagline.toLowerCase().includes(kw));
-        return matchCat || matchModel;
-      });
-    },
-
-    favoriteModels() {
-      return this.allModels.filter(m => this.favoriteKeys.includes(m.modelKey));
-    },
-
-    currentSubContent() {
-      if (!this.selectedModel || !this.selectedModel.contents) return null;
-      return this.selectedModel.contents.find(c => c.subMenuType === this.activeSubTab);
-    },
-
-    renderedMarkdown() {
-      if (!this.currentSubContent || !this.currentSubContent.contentBody) return '';
-      try {
-        return marked.parse(this.currentSubContent.contentBody);
-      } catch (e) {
-        return this.currentSubContent.contentBody;
-      }
-    },
-
-    renderedAiAnswer() {
-      if (!this.aiAnswer) return '';
-      try {
-        return marked.parse(this.aiAnswer);
-      } catch (e) {
-        return this.aiAnswer;
-      }
+      return 'component-' + this.currentRailView;
     }
-  },
-  watch: {
-    renderedMarkdown() {
-      this.$nextTick(() => {
-        this.highlightCodeBlocks();
-      });
-    }
-  },
-  created() {
-    this.initData();
   },
   methods: {
-    async initData() {
-      try {
-        // 1. Fetch categories with models
-        const catRes = await fetch('/api/categories');
-        this.categories = await catRes.json();
-
-        // 2. Fetch all models
-        const modelRes = await fetch('/api/models');
-        this.allModels = await modelRes.json();
-
-        // 3. Fetch stats
-        const statsRes = await fetch('/api/stats');
-        this.stats = await statsRes.json();
-
-        // 4. Default selection: First model (Claude 3.7 Sonnet or GPT-4o)
-        if (this.allModels.length > 0) {
-          const defaultKey = 'claude-3-7-sonnet';
-          const exists = this.allModels.find(m => m.modelKey === defaultKey);
-          await this.selectModel(exists ? defaultKey : this.allModels[0].modelKey);
-        }
-      } catch (err) {
-        console.error('Error fetching data from Spring Boot API:', err);
-      }
-    },
-
     selectRailItem(railKey) {
       this.currentRailView = railKey;
-      if (railKey === 'favorites') {
-        this.viewMode = 'dashboard';
-      } else if (railKey === 'c') {
-        if (!this.selectedModel && this.allModels.length > 0) {
-          this.selectModel(this.allModels[0].modelKey);
-        }
-      }
-    },
-
-    showCategoryFlyout(cat, event) {
-      if (this.flyoutTimer) {
-        clearTimeout(this.flyoutTimer);
-        this.flyoutTimer = null;
-      }
-      if (event && event.currentTarget) {
-        const rect = event.currentTarget.getBoundingClientRect();
-        // Keep within viewport height
-        this.flyoutTop = Math.max(12, Math.min(rect.top - 12, window.innerHeight - 380));
-      }
-      this.hoveredCategory = cat;
-    },
-
-    hideCategoryFlyout() {
-      if (this.flyoutTimer) clearTimeout(this.flyoutTimer);
-      this.flyoutTimer = setTimeout(() => {
-        this.hoveredCategory = null;
-      }, 180);
-    },
-
-    keepCategoryFlyout() {
-      if (this.flyoutTimer) {
-        clearTimeout(this.flyoutTimer);
-        this.flyoutTimer = null;
-      }
-    },
-
-    async selectModel(modelKey) {
-      this.viewMode = 'model';
-      try {
-        const res = await fetch(`/api/models/${modelKey}`);
-        if (res.ok) {
-          this.selectedModel = await res.json();
-          if (!this.activeSubTab) {
-            this.activeSubTab = 'OVERVIEW';
-          }
-          this.$nextTick(() => {
-            this.highlightCodeBlocks();
-          });
-        }
-      } catch (err) {
-        console.error('Error loading model detail:', err);
-      }
-    },
-
-    async selectModelAndTab(modelKey, tabKey) {
-      this.hoveredCategory = null;
-      this.activeSubTab = tabKey;
-      await this.selectModel(modelKey);
-    },
-
-    isCurrentModelAndTab(modelKey, tabKey) {
-      return this.selectedModel && this.selectedModel.modelKey === modelKey && this.activeSubTab === tabKey;
-    },
-
-    getSubTabTitle(tabKey) {
-      const titles = {
-        'OVERVIEW': '소개 및 개요',
-        'USAGE': '주요 특징 & 사용법',
-        'PROS_CONS': '장단점 비교',
-        'BENCHMARKS': '벤치마크 및 스펙',
-        'LINKS': '공식 연결 링크'
-      };
-      return titles[tabKey] || tabKey;
-    },
-
-    isFavorite(modelKey) {
-      return this.favoriteKeys.includes(modelKey);
-    },
-
-    toggleFavorite(model) {
-      if (!model) return;
-      const idx = this.favoriteKeys.indexOf(model.modelKey);
-      if (idx >= 0) {
-        this.favoriteKeys.splice(idx, 1);
-      } else {
-        this.favoriteKeys.push(model.modelKey);
-      }
-    },
-
-    selectDashboardView() {
-      this.viewMode = 'dashboard';
-      this.hoveredCategory = null;
-    },
-
-    selectLeaderboardView() {
-      this.viewMode = 'leaderboard';
-      this.hoveredCategory = null;
-    },
-
-    cycleAiFocus() {
-      this.aiFocusIndex = (this.aiFocusIndex + 1) % this.aiFocusOptions.length;
-      this.aiFocus = this.aiFocusOptions[this.aiFocusIndex];
-    },
-
-    askAiAdvisor() {
-      if (!this.aiQuery.trim()) return;
-
-      const q = this.aiQuery.toLowerCase();
-      let answer = '';
-
-      if (q.includes('코딩') || q.includes('에이전트') || q.includes('개발') || q.includes('swe')) {
-        answer = `**🎯 코딩 및 에이전트 최적 추천: Claude 3.7 Sonnet**\n\n- **선정 이유**: SWE-bench Verified 70.3%로 현존 모든 모델 중 1위를 기록하고 있습니다.\n- **핵심 장점**: 자율 추론(Thinking Budget) 조절을 통해 대규모 리팩토링 및 파일 단위 수정에서 환각율이 가장 낮습니다.\n- **오픈소스 대안**: 사내 온프레미스 환경이라면 **Qwen 2.5 Coder 32B** 또는 **DeepSeek-R1**을 강력 추천합니다.`;
-      } else if (q.includes('가성비') || q.includes('빠른') || q.includes('속도') || q.includes('비용')) {
-        answer = `**⚡ 초고속 & 가성비 최적 추천: Gemini 2.0 Flash / DeepSeek-V3**\n\n- **Gemini 2.0 Flash**: 100만 토큰 컨텍스트 지원 및 초당 135+ 토큰 출력, 가격은 입력 1M당 $0.10으로 극단적으로 저렴합니다.\n- **DeepSeek-V3**: 671B 대형 MoE 모델임에도 1M당 $0.14의 혁신적인 단가로 상용 서비스 대규모 트래픽 처리에 적합합니다.`;
-      } else if (q.includes('추론') || q.includes('수학') || q.includes('r1') || q.includes('o1')) {
-        answer = `**🧠 고난도 수학 & 과학 추론 비교: OpenAI o1 vs DeepSeek-R1**\n\n- **DeepSeek-R1**: 미국 수학 올림피아드 AIME 2024에서 79.8%를 기록하며 o1을 대등/추월했습니다. 특히 **MIT 라이선스 오픈 가중치**로 온프레미스 배포가 가능합니다.\n- **OpenAI o1**: 엄격한 폐쇄형 API이지만 영어권 학술 과학(GPQA) 및 일관된 시스템 안정성에서 최고 수준입니다.`;
-      } else if (q.includes('사내') || q.includes('폐쇄망') || q.includes('오픈소스') || q.includes('로컬')) {
-        answer = `**🔒 사내 폐쇄망 & 온프레미스 최적 추천: Llama 3.3 70B & DeepSeek-R1**\n\n- **범용 엔터프라이즈**: Meta의 **Llama 3.3 70B Instruct** (405B급 지능을 70B 단일 노드 GPU에 경량화)\n- **심층 추론/분석**: **DeepSeek-R1 (671B / 경량 증류 모델 14B~32B)** (vLLM, Ollama 즉시 연동 가능)\n- **보안 이점**: 외부 네트워크 트래픽 0%, 완전 자체 호스팅 가능.`;
-      } else {
-        answer = `**💡 c-TTTM 어드바이저 안내**\n\n- 현재 질의하신 내용과 관련하여 **${this.selectedModel ? this.selectedModel.name : 'Claude 3.7 Sonnet'}** 및 **Gemini 2.0 Flash**를 비교 검토하시는 것을 추천합니다.\n- 좌측 2번째 메뉴의 대메뉴(OpenAI, Anthropic 등) 위에 마우스를 올리시면 횡방향 모델 목록 및 종방향 서브메뉴(개요, 사용법, 장단점, 벤치마크, 링크)를 바로 탐색하실 수 있습니다.`;
-      }
-
-      this.aiAnswer = answer;
-    },
-
-    async onSearch() {
-      // In tree mode, filteredCategories computed property handles real-time filtering
-    },
-
-    async refreshData() {
-      await this.initData();
-      alert('API 및 최신 모델 동기화가 완료되었습니다.');
-    },
-
-    highlightCodeBlocks() {
-      document.querySelectorAll('pre code').forEach((el) => {
-        hljs.highlightElement(el);
-      });
-
-      // Add copy button to pre blocks
-      document.querySelectorAll('.plane-card pre').forEach((pre) => {
-        if (!pre.parentElement.classList.contains('plane-code-block')) {
-          const wrapper = document.createElement('div');
-          wrapper.className = 'plane-code-block';
-          
-          const header = document.createElement('div');
-          header.className = 'plane-code-header';
-          header.innerHTML = `<span>Code Snippet</span>`;
-          
-          const copyBtn = document.createElement('button');
-          copyBtn.className = 'plane-copy-btn';
-          copyBtn.innerText = '복사하기';
-          copyBtn.onclick = () => {
-            navigator.clipboard.writeText(pre.innerText);
-            copyBtn.innerText = '복사 완료!';
-            setTimeout(() => { copyBtn.innerText = '복사하기'; }, 1500);
-          };
-          header.appendChild(copyBtn);
-
-          pre.parentNode.insertBefore(wrapper, pre);
-          wrapper.appendChild(header);
-          wrapper.appendChild(pre);
-        }
-      });
     }
   }
 });

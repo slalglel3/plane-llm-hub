@@ -7,6 +7,7 @@ public class Category implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private Long id;
+    private String moduleType; // 'c', 'i', 'f', 'o'
     private String slug;
     private String name;
     private String icon;
@@ -18,6 +19,9 @@ public class Category implements Serializable {
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+
+    public String getModuleType() { return moduleType; }
+    public void setModuleType(String moduleType) { this.moduleType = moduleType; }
 
     public String getSlug() { return slug; }
     public void setSlug(String slug) { this.slug = slug; }

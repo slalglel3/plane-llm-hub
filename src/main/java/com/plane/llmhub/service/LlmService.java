@@ -36,6 +36,13 @@ public class LlmService {
         return categoryMapper.selectAll();
     }
 
+    public List<Category> getCategoriesByModule(String moduleType) {
+        if (moduleType == null || moduleType.trim().isEmpty()) {
+            return categoryMapper.selectAll();
+        }
+        return categoryMapper.selectByModule(moduleType.toLowerCase());
+    }
+
     public List<LlmModel> getAllModels() {
         return modelMapper.selectAll();
     }

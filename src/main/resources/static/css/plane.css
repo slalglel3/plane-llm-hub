@@ -1,4 +1,4 @@
-/* Plane Web Design Language CSS */
+/* Plane Web Design Language + Enterprise UI (AUIGrid & CrossEditor) */
 :root {
   --plane-rail-bg: #0d1117;
   --plane-rail-hover: #161b22;
@@ -17,6 +17,19 @@
   --plane-warning: #f59e0b;
   --plane-danger: #ef4444;
   --plane-font: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  /* AUIGrid Enterprise Palette */
+  --aui-header-bg: #f1f5f9;
+  --aui-header-border: #cbd5e1;
+  --aui-header-text: #1e293b;
+  --aui-row-hover: #e0f2fe;
+  --aui-row-selected: #bae6fd;
+  --aui-border: #e2e8f0;
+
+  /* CrossEditor Palette */
+  --editor-border: #cbd5e1;
+  --editor-toolbar-bg: #f8fafc;
+  --editor-active-btn: #e2e8f0;
 }
 
 * {
@@ -65,7 +78,7 @@ body {
   justify-content: center;
   font-weight: 700;
   font-size: 16px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
 }
@@ -73,14 +86,14 @@ body {
 .plane-rail-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
   width: 100%;
   align-items: center;
 }
 
 .plane-rail-item {
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -104,7 +117,7 @@ body {
 .plane-rail-item.active::before {
   content: '';
   position: absolute;
-  left: -8px;
+  left: -9px;
   width: 4px;
   height: 20px;
   background-color: #60a5fa;
@@ -127,7 +140,7 @@ body {
   visibility: hidden;
   opacity: 0;
   position: absolute;
-  left: 54px;
+  left: 50px;
   top: 50%;
   transform: translateY(-50%);
   background: #0f172a;
@@ -162,7 +175,7 @@ body {
 
 .plane-rail-letter {
   font-family: 'JetBrains Mono', Consolas, Monaco, monospace;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
 }
 
@@ -171,19 +184,19 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .plane-avatar {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: #334155;
   color: #f1f5f9;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   border: 1px solid rgba(255, 255, 255, 0.15);
@@ -204,11 +217,10 @@ body {
 }
 
 .plane-sidebar-header {
-  padding: 16px;
+  padding: 14px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid transparent;
 }
 
 .plane-workspace-selector {
@@ -216,7 +228,7 @@ body {
   align-items: center;
   gap: 8px;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13.5px;
   color: var(--plane-text-main);
   cursor: pointer;
   padding: 4px 8px;
@@ -255,17 +267,17 @@ body {
 .plane-search-input-wrapper svg {
   position: absolute;
   left: 10px;
-  width: 15px;
-  height: 15px;
+  width: 14px;
+  height: 14px;
   color: var(--plane-text-subtle);
 }
 
 .plane-search-input {
   width: 100%;
-  padding: 7px 10px 7px 32px;
+  padding: 6px 10px 6px 30px;
   border: 1px solid var(--plane-border);
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 12.5px;
   background-color: #ffffff;
   color: var(--plane-text-main);
   outline: none;
@@ -278,7 +290,7 @@ body {
 
 /* Sidebar Section Titles & Lists */
 .plane-nav-section {
-  padding: 8px 12px;
+  padding: 6px 12px;
 }
 
 .plane-nav-section-title {
@@ -287,7 +299,7 @@ body {
   text-transform: uppercase;
   color: var(--plane-text-subtle);
   letter-spacing: 0.5px;
-  padding: 6px 8px;
+  padding: 5px 8px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -306,7 +318,7 @@ body {
   gap: 10px;
   padding: 8px 12px;
   border-radius: 6px;
-  font-size: 13.5px;
+  font-size: 13px;
   color: var(--plane-text-muted);
   cursor: pointer;
   transition: all 0.12s ease;
@@ -335,8 +347,8 @@ body {
 
 .plane-nav-item .chevron {
   margin-left: auto;
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
   color: #94a3b8;
   transition: transform 0.15s;
 }
@@ -349,7 +361,7 @@ body {
 
 .plane-sidebar-footer {
   margin-top: auto;
-  padding: 12px 16px;
+  padding: 10px 14px;
   border-top: 1px solid var(--plane-sidebar-border);
 }
 
@@ -358,7 +370,7 @@ body {
   border: 1px solid #fbcfe8;
   color: #db2777;
   font-size: 11px;
-  padding: 5px 10px;
+  padding: 5px 8px;
   border-radius: 6px;
   font-weight: 600;
   display: flex;
@@ -367,24 +379,24 @@ body {
   cursor: pointer;
 }
 
-/* 3. Tree Mega-Menu Flyout (Portal directly to the right of Sidebar) */
+/* 3. Compact 4~5 Columns Tree Flyout */
 .plane-tree-flyout-portal {
   position: fixed;
   background: #ffffff;
   border: 1px solid var(--plane-border);
-  border-radius: 12px;
-  box-shadow: 0 20px 40px -6px rgba(15, 23, 42, 0.18), 0 4px 12px rgba(0, 0, 0, 0.06);
-  padding: 20px 24px;
+  border-radius: 10px;
+  box-shadow: 0 16px 36px -4px rgba(15, 23, 42, 0.16), 0 4px 12px rgba(0, 0, 0, 0.06);
+  padding: 16px 20px;
   z-index: 200;
-  min-width: 560px;
-  max-width: 900px;
-  animation: flyoutSlide 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  min-width: 680px;
+  max-width: 960px;
+  animation: flyoutSlide 0.12s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes flyoutSlide {
   from {
     opacity: 0;
-    transform: translateX(-6px);
+    transform: translateX(-4px);
   }
   to {
     opacity: 1;
@@ -396,8 +408,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 12px;
-  margin-bottom: 16px;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
   border-bottom: 1px solid var(--plane-border);
 }
 
@@ -405,7 +417,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--plane-text-main);
 }
@@ -415,54 +427,59 @@ body {
   color: var(--plane-text-muted);
 }
 
-/* Horizontal Models Row (횡방향 나열) */
+/* Horizontal Models Row (4 ~ 5열 횡방향 나열) */
 .plane-flyout-models-row {
   display: flex;
-  gap: 20px;
+  gap: 12px;
   align-items: flex-start;
   overflow-x: auto;
-  padding-bottom: 6px;
+  padding-bottom: 4px;
 }
 
-/* Individual Model Column */
+/* Individual Model Column - 슬림화 & 설명 삭제 */
 .plane-flyout-model-col {
   flex: 1;
-  min-width: 240px;
+  min-width: 140px;
+  max-width: 165px;
   background: #f8fafc;
   border: 1px solid var(--plane-border);
-  border-radius: 8px;
-  padding: 14px 16px;
-  transition: all 0.15s ease;
+  border-radius: 6px;
+  padding: 10px 10px;
+  transition: all 0.12s ease;
 }
 
 .plane-flyout-model-col:hover {
   border-color: #93c5fd;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
   background: #ffffff;
 }
 
 .plane-flyout-model-top {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 4px;
   cursor: pointer;
-  padding-bottom: 8px;
+  padding-bottom: 6px;
   border-bottom: 1px solid #e2e8f0;
 }
 
 .plane-flyout-model-name {
-  font-size: 14px;
+  font-size: 12.5px;
   font-weight: 700;
   color: var(--plane-text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .plane-flyout-model-badge {
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 600;
-  padding: 2px 7px;
-  border-radius: 12px;
+  padding: 1px 5px;
+  border-radius: 10px;
   background: #e0f2fe;
   color: #0369a1;
+  align-self: flex-start;
 }
 
 /* Vertical Sub-menus under each Model (종방향 나열) */
@@ -470,28 +487,29 @@ body {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-top: 10px;
+  gap: 2px;
+  margin-top: 8px;
 }
 
 .plane-flyout-submenu-item {
-  padding: 7px 10px;
-  border-radius: 6px;
-  font-size: 12.5px;
+  padding: 5px 6px;
+  border-radius: 4px;
+  font-size: 11.5px;
   color: #475569;
   font-weight: 500;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
-  transition: all 0.12s ease;
+  gap: 5px;
+  transition: all 0.1s ease;
+  white-space: nowrap;
 }
 
 .plane-flyout-submenu-item:hover {
   background: var(--plane-accent-light);
   color: var(--plane-accent);
   font-weight: 600;
-  transform: translateX(3px);
+  transform: translateX(2px);
 }
 
 .plane-flyout-submenu-item.current {
@@ -512,12 +530,12 @@ body {
 
 /* Header & Breadcrumbs */
 .plane-header {
-  height: 52px;
+  height: 50px;
   border-bottom: 1px solid var(--plane-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
+  padding: 0 20px;
   flex-shrink: 0;
   background-color: #ffffff;
 }
@@ -539,14 +557,14 @@ body {
 .plane-header-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .plane-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
+  padding: 5px 11px;
   border-radius: 6px;
   font-size: 12px;
   font-weight: 600;
@@ -575,209 +593,8 @@ body {
 .plane-content-body {
   flex: 1;
   overflow-y: auto;
-  padding: 24px 32px 60px 32px;
+  padding: 20px 28px 50px 28px;
   background-color: #fbfcfd;
-}
-
-/* Placeholder for non-c rail views */
-.plane-module-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 20px;
-  text-align: center;
-}
-
-.plane-module-icon-large {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 48px;
-  font-weight: 800;
-  width: 90px;
-  height: 90px;
-  border-radius: 18px;
-  background: linear-gradient(135deg, #eff6ff, #dbeafe);
-  color: #2563eb;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 20px;
-  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.12);
-}
-
-/* Ask Pi / LLM Advisor Box */
-.plane-ai-advisor {
-  background: #ffffff;
-  border: 1px solid var(--plane-border);
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-}
-
-.plane-ai-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.plane-ai-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.plane-beta-tag {
-  background-color: #fef3c7;
-  color: #d97706;
-  font-size: 10px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.plane-ai-input-box {
-  border: 1px solid var(--plane-border);
-  border-radius: 8px;
-  padding: 12px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  background: #fafafa;
-  transition: border-color 0.15s;
-}
-
-.plane-ai-input-box:focus-within {
-  border-color: var(--plane-accent);
-  background: #ffffff;
-}
-
-.plane-ai-textarea {
-  border: none;
-  outline: none;
-  resize: none;
-  font-family: inherit;
-  font-size: 14px;
-  background: transparent;
-  color: var(--plane-text-main);
-  height: 48px;
-}
-
-.plane-ai-controls {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-top: 1px solid #f1f5f9;
-  padding-top: 8px;
-}
-
-.plane-focus-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  background: #f1f5f9;
-  border-radius: 6px;
-  font-size: 12px;
-  color: var(--plane-text-muted);
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.plane-ai-send-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--plane-accent);
-  color: #ffffff;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: transform 0.1s;
-}
-
-.plane-ai-send-btn:hover {
-  background: #1d4ed8;
-  transform: scale(1.05);
-}
-
-.plane-ai-footer-note {
-  font-size: 11px;
-  color: var(--plane-text-subtle);
-  text-align: center;
-  margin-top: 8px;
-}
-
-/* Model Detail Header */
-.plane-model-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 20px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--plane-border);
-}
-
-.plane-model-title-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.plane-model-name {
-  font-size: 26px;
-  font-weight: 700;
-  color: var(--plane-text-main);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.plane-model-badge {
-  font-size: 12px;
-  font-weight: 600;
-  padding: 3px 10px;
-  border-radius: 20px;
-  background: #e0f2fe;
-  color: #0369a1;
-}
-
-.plane-model-tagline {
-  font-size: 14px;
-  color: var(--plane-text-muted);
-}
-
-.plane-specs-strip {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.plane-spec-chip {
-  background: #ffffff;
-  border: 1px solid var(--plane-border);
-  border-radius: 8px;
-  padding: 8px 14px;
-  display: flex;
-  flex-direction: column;
-}
-.plane-spec-label {
-  font-size: 11px;
-  color: var(--plane-text-subtle);
-  font-weight: 600;
-  text-transform: uppercase;
-}
-.plane-spec-value {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--plane-text-main);
-  margin-top: 2px;
 }
 
 /* Sub-Menu Tabs (Plane Web Horizontal Tabs) */
@@ -785,11 +602,11 @@ body {
   display: flex;
   gap: 4px;
   border-bottom: 1px solid var(--plane-border);
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .plane-tab-item {
-  padding: 10px 18px;
+  padding: 9px 16px;
   font-size: 13px;
   font-weight: 600;
   color: var(--plane-text-muted);
@@ -798,7 +615,7 @@ body {
   transition: all 0.15s ease;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .plane-tab-item:hover {
@@ -814,299 +631,293 @@ body {
 .plane-card {
   background: #ffffff;
   border: 1px solid var(--plane-border);
-  border-radius: 10px;
-  padding: 24px;
-  margin-bottom: 20px;
+  border-radius: 8px;
+  padding: 20px 24px;
+  margin-bottom: 18px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .plane-card h3 {
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 700;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
   color: var(--plane-text-main);
-}
-
-.plane-card h4 {
-  font-size: 14px;
-  font-weight: 600;
-  margin: 16px 0 8px 0;
-  color: #334155;
 }
 
 .plane-card p {
-  font-size: 14px;
-  line-height: 1.65;
-  color: #334155;
-  margin-bottom: 12px;
-}
-
-.plane-card ul, .plane-card ol {
-  padding-left: 20px;
-  margin-bottom: 14px;
-}
-
-.plane-card li {
-  font-size: 14px;
+  font-size: 13.5px;
   line-height: 1.6;
   color: #334155;
-  margin-bottom: 6px;
+  margin-bottom: 10px;
 }
 
-/* Markdown tables */
-.plane-card table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 16px 0;
-  font-size: 13px;
-}
-
-.plane-card th, .plane-card td {
-  padding: 10px 14px;
-  text-align: left;
-  border-bottom: 1px solid var(--plane-border);
-}
-
-.plane-card th {
-  background-color: #f8fafc;
-  font-weight: 600;
-  color: var(--plane-text-muted);
-}
-
-/* Code Snippet Blocks */
-.plane-code-block {
-  background: #0f172a;
+/* ========================================================
+   5. AUIGrid Enterprise Data Grid Component Styling
+   ======================================================== */
+.aui-grid-wrapper {
+  background: #ffffff;
+  border: 1px solid var(--aui-border);
   border-radius: 8px;
-  padding: 16px;
-  margin: 14px 0;
-  position: relative;
-  overflow-x: auto;
-}
-
-.plane-code-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 8px;
-  margin-bottom: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  font-size: 11px;
-  color: #94a3b8;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.plane-copy-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  color: #cbd5e1;
-  padding: 4px 10px;
-  border-radius: 4px;
-  font-size: 11px;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.plane-copy-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-}
-
-.plane-code-block pre {
-  margin: 0;
-  font-family: 'JetBrains Mono', Consolas, Monaco, monospace;
-  font-size: 13px;
-  color: #e2e8f0;
-  line-height: 1.5;
-}
-
-/* Pros and Cons Split Layout */
-.plane-pros-cons-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   margin-top: 14px;
 }
 
-.plane-pros-card {
-  border-top: 3px solid var(--plane-success);
-  background: #ffffff;
-  padding: 18px;
-  border-radius: 8px;
-  border-left: 1px solid var(--plane-border);
-  border-right: 1px solid var(--plane-border);
-  border-bottom: 1px solid var(--plane-border);
-}
-
-.plane-cons-card {
-  border-top: 3px solid var(--plane-danger);
-  background: #ffffff;
-  padding: 18px;
-  border-radius: 8px;
-  border-left: 1px solid var(--plane-border);
-  border-right: 1px solid var(--plane-border);
-  border-bottom: 1px solid var(--plane-border);
-}
-
-.plane-pros-card h4 {
-  color: var(--plane-success);
-  font-size: 15px;
-  margin-top: 0;
-}
-.plane-cons-card h4 {
-  color: var(--plane-danger);
-  font-size: 15px;
-  margin-top: 0;
-}
-
-/* Benchmark Metric Bars */
-.plane-metric-bar-group {
-  margin-bottom: 14px;
-}
-
-.plane-metric-bar-header {
+.aui-grid-toolbar {
+  background: #f8fafc;
+  border-bottom: 1px solid var(--aui-border);
+  padding: 8px 14px;
   display: flex;
+  align-items: center;
   justify-content: space-between;
+  gap: 10px;
+}
+
+.aui-grid-title {
   font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 6px;
-}
-
-.plane-metric-progress {
-  width: 100%;
-  height: 8px;
-  background: #e2e8f0;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.plane-metric-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #3b82f6, #2563eb);
-  border-radius: 4px;
-  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* Links Grid */
-.plane-links-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
-  margin-top: 12px;
-}
-
-.plane-link-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px;
-  border: 1px solid var(--plane-border);
-  border-radius: 8px;
-  text-decoration: none;
-  color: var(--plane-text-main);
-  background: #ffffff;
-  transition: all 0.15s ease;
-}
-
-.plane-link-item:hover {
-  border-color: var(--plane-accent);
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
-  transform: translateY(-1px);
-}
-
-.plane-link-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.plane-link-title {
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.plane-link-url {
-  font-size: 12px;
-  color: var(--plane-text-subtle);
-}
-
-/* Modal Window */
-.plane-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(15, 23, 42, 0.5);
-  backdrop-filter: blur(2px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 300;
-}
-
-.plane-modal-content {
-  background: #ffffff;
-  border-radius: 12px;
-  width: 520px;
-  max-width: 90vw;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.plane-modal-header {
-  padding: 20px 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--plane-border);
-}
-
-.plane-modal-title {
-  font-size: 17px;
   font-weight: 700;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.plane-modal-close {
-  background: transparent;
-  border: none;
-  font-size: 20px;
-  color: var(--plane-text-muted);
+.aui-btn-group {
+  display: flex;
+  gap: 6px;
+}
+
+.aui-btn {
+  padding: 4px 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.12s;
+}
+.aui-btn:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+.aui-btn-excel {
+  background: #f0fdf4;
+  border-color: #86efac;
+  color: #15803d;
+}
+.aui-btn-excel:hover {
+  background: #dcfce7;
+}
+
+.aui-table-container {
+  overflow-x: auto;
+  max-height: 480px;
+}
+
+.aui-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  text-align: left;
+}
+
+.aui-table th {
+  background: var(--aui-header-bg);
+  border-bottom: 2px solid var(--aui-header-border);
+  border-right: 1px solid #e2e8f0;
+  color: var(--aui-header-text);
+  font-weight: 600;
+  padding: 8px 12px;
+  white-space: nowrap;
+  user-select: none;
   cursor: pointer;
 }
-
-.plane-modal-body {
-  padding: 20px 24px;
-  max-height: 70vh;
-  overflow-y: auto;
+.aui-table th:hover {
+  background: #e2e8f0;
 }
 
-.plane-modal-section-title {
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--plane-text-subtle);
-  margin-bottom: 12px;
+.aui-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--aui-border);
+  border-right: 1px solid #f1f5f9;
+  color: #334155;
+  white-space: nowrap;
 }
 
-.plane-modal-item {
+.aui-table tr:hover {
+  background-color: var(--aui-row-hover);
+}
+.aui-table tr.selected {
+  background-color: var(--aui-row-selected);
+}
+
+.aui-grid-footer {
+  background: #f8fafc;
+  border-top: 1px solid var(--aui-border);
+  padding: 8px 14px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 12px;
-  border-radius: 6px;
-  background: #f8fafc;
-  margin-bottom: 8px;
-  font-size: 13px;
-  font-weight: 500;
+  justify-content: space-between;
+  font-size: 11.5px;
+  color: #64748b;
 }
 
-.plane-modal-footer {
-  padding: 16px 24px;
-  background: #f8fafc;
-  border-top: 1px solid var(--plane-border);
+.aui-pagination {
   display: flex;
-  justify-content: flex-end;
-  gap: 10px;
+  gap: 4px;
+  align-items: center;
+}
+.aui-page-btn {
+  padding: 2px 7px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 11px;
+}
+.aui-page-btn.active {
+  background: var(--plane-accent);
+  color: #ffffff;
+  border-color: var(--plane-accent);
+}
+
+/* ========================================================
+   6. Namo CrossEditor Enterprise WYSIWYG Component Styling
+   ======================================================== */
+.cross-editor-wrapper {
+  background: #ffffff;
+  border: 1px solid var(--editor-border);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  margin-top: 14px;
+}
+
+.cross-editor-topbar {
+  background: #f1f5f9;
+  border-bottom: 1px solid var(--editor-border);
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.cross-editor-brand {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cross-editor-toolbar {
+  background: var(--editor-toolbar-bg);
+  border-bottom: 1px solid var(--editor-border);
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cross-editor-tool-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.cross-tool-btn {
+  padding: 3px 7px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.cross-tool-btn:hover {
+  background: #e2e8f0;
+}
+.cross-tool-btn.active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+
+.cross-tool-select {
+  padding: 3px 6px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  border-radius: 3px;
+  font-size: 11px;
+  color: #334155;
+  outline: none;
+}
+
+.cross-editor-canvas {
+  min-height: 240px;
+  max-height: 400px;
+  padding: 16px;
+  overflow-y: auto;
+  outline: none;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: #0f172a;
+}
+.cross-editor-canvas:focus {
+  background: #fafafa;
+}
+
+.cross-editor-source-textarea {
+  width: 100%;
+  min-height: 240px;
+  max-height: 400px;
+  padding: 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  border: none;
+  outline: none;
+  resize: vertical;
+  background: #0f172a;
+  color: #38bdf8;
+  line-height: 1.5;
+}
+
+.cross-editor-statusbar {
+  background: #f8fafc;
+  border-top: 1px solid var(--editor-border);
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.cross-editor-modes {
+  display: flex;
+  gap: 2px;
+}
+.cross-mode-tab {
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid #cbd5e1;
+  border-bottom: none;
+  background: #f1f5f9;
+  cursor: pointer;
+  border-radius: 3px 3px 0 0;
+  color: #64748b;
+}
+.cross-mode-tab.active {
+  background: #ffffff;
+  color: #2563eb;
+  font-weight: 700;
 }
