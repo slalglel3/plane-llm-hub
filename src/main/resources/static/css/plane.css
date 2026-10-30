@@ -365,18 +365,22 @@ body {
   border-top: 1px solid var(--plane-sidebar-border);
 }
 
-.plane-trial-badge {
-  background: #fdf2f8;
-  border: 1px solid #fbcfe8;
-  color: #db2777;
-  font-size: 11px;
-  padding: 5px 8px;
-  border-radius: 6px;
-  font-weight: 600;
+.plane-user-guide-link {
+  color: var(--plane-text-muted);
+  font-size: 12px;
   display: flex;
   align-items: center;
   gap: 6px;
   cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 6px;
+  transition: all 0.12s ease;
+  user-select: none;
+}
+
+.plane-user-guide-link:hover {
+  background: #e2e8f0;
+  color: var(--plane-text-main);
 }
 
 /* 3. Compact 4~5 Columns Tree Flyout */

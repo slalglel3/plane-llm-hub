@@ -83,7 +83,7 @@ Vue.component('aui-grid', {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.setAttribute("href", url);
-      link.setAttribute("download", `AUIGrid_Export_${new Date().toISOString().slice(0,10)}.csv`);
+      link.setAttribute("download", `데이터_분석_시트_${new Date().toISOString().slice(0,10)}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -95,10 +95,9 @@ Vue.component('aui-grid', {
         <div class="aui-grid-title">
           <span style="color:#2563eb;">▦</span>
           <span>{{ title }}</span>
-          <span style="font-size:11px; color:#64748b; font-weight:normal;">[AUIGrid v4.2.0 Enterprise Engine]</span>
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
-          <input type="text" v-model="filterText" placeholder="그리드 필터 검색..." class="plane-search-input" style="width:180px; padding:4px 8px; font-size:11.5px;">
+          <input type="text" v-model="filterText" placeholder="검색 필터..." class="plane-search-input" style="width:180px; padding:4px 8px; font-size:11.5px;">
           <div class="aui-btn-group">
             <button class="aui-btn aui-btn-excel" @click="exportExcel">
               <span>📗</span> 엑셀 다운로드
@@ -226,7 +225,7 @@ Vue.component('cross-editor', {
       this.exec('insertHTML', tableHtml);
     },
     saveDocument() {
-      alert('CrossEditor: 본문 내용이 성공적으로 저장되었습니다.');
+      alert('문서 내용이 성공적으로 저장되었습니다.');
       this.$emit('save', this.contentHtml);
     }
   },
@@ -236,11 +235,10 @@ Vue.component('cross-editor', {
         <div class="cross-editor-brand">
           <span style="color:#2563eb;">✎</span>
           <span>{{ title }}</span>
-          <span style="font-size:10.5px; color:#64748b; font-weight:normal;">[CrossEditor v3.5 Enterprise]</span>
         </div>
         <div style="display:flex; gap:6px;">
           <button class="aui-btn" style="background:#2563eb; color:#fff; border-color:#2563eb;" @click="saveDocument">
-            <span>💾</span> 본문 저장
+            <span>💾</span> 저장
           </button>
         </div>
       </div>
@@ -323,45 +321,44 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
         allModels: [],
         selectedModel: null,
         activeSubTab: 'OVERVIEW',
-        viewMode: 'model', // 'model' | 'dashboard' | 'auigrid' | 'crosseditor'
         hoveredCategory: null,
         flyoutTop: 120,
         flyoutTimer: null,
         searchKeyword: '',
         
-        // AUIGrid Sample Columns
+        // AUIGrid Columns
         gridColumns: [
           { header: 'ID', key: 'id', width: '60px' },
-          { header: '이름 (Name)', key: 'name', width: '180px' },
-          { header: '분류 / 제공사', key: 'provider', width: '140px' },
+          { header: '항목명 (Name)', key: 'name', width: '180px' },
+          { header: '제공사 / 분류', key: 'provider', width: '140px' },
           { header: '릴리즈 일자', key: 'releaseDate', width: '100px' },
           { header: '규격 / 스펙', key: 'contextWindow', width: '120px' },
           { header: '단가 / 요금제', key: 'pricingInput', width: '130px' },
-          { header: '태그 배지', key: 'badge', width: '100px', badge: true }
+          { header: '상태 배지', key: 'badge', width: '100px', badge: true }
         ],
 
         // CrossEditor Content Model
         crossEditorHtml: `
-          <h2 style="color:#1e293b; border-bottom:2px solid #2563eb; padding-bottom:8px;">사내 표준 기술 가이드라인 (${moduleTitle})</h2>
-          <p>본 문서는 사내 <strong>${moduleTitle}</strong> 인프라 및 도구 활용 표준 가이드를 정의합니다.</p>
+          <h2 style="color:#1e293b; border-bottom:2px solid #2563eb; padding-bottom:8px;">${moduleTitle} 표준 운영 가이드</h2>
+          <p>본 문서는 <strong>${moduleTitle}</strong> 서비스 활용 및 표준 운영 지침을 정의합니다.</p>
           <table border="1" cellpadding="8" style="border-collapse:collapse; width:100%; border:1px solid #cbd5e1; margin-top:12px;">
             <tr style="background:#f1f5f9;">
               <th>검토 항목</th>
-              <th>적용 기준</th>
+              <th>표준 기준</th>
               <th>비고</th>
             </tr>
             <tr>
               <td>보안 및 권한</td>
-              <td>사내 SSO 연동 및 RBAC 역할 제어</td>
-              <td>기밀 데이터 마스킹 필수</td>
+              <td>SSO 연동 및 역할 기반 접근 제어</td>
+              <td>기밀 데이터 마스킹 적용</td>
             </tr>
             <tr>
-              <td>성능 SLA</td>
-              <td>99.9% 가용성 및 P95 지연시간 200ms 이내</td>
-              <td>AUIGrid 모니터링 연계</td>
+              <td>가용성 및 성능</td>
+              <td>99.9% 가용성 및 지연시간 200ms 이내</td>
+              <td>실시간 모니터링 연계</td>
             </tr>
           </table>
-          <p style="margin-top:12px;">※ 변경 사항 발생 시 CrossEditor를 통해 즉시 수정 후 배포하십시오.</p>
+          <p style="margin-top:12px;">※ 변경 사항 발생 시 상단 서식 도구를 활용하여 수정 후 저장하십시오.</p>
         `
       };
     },
@@ -387,12 +384,12 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
         if (type === 'OVERVIEW') {
           return {
             title: `${m.name} 소개 및 개요`,
-            contentBody: `### ${m.name}: ${m.tagline || '핵심 서비스 및 기술 사양'}\n\n- **제공자 / 플랫폼**: ${m.provider}\n- **출시 / 등록일**: ${m.releaseDate}\n- **주요 규격 / 스펙**: ${m.contextWindow}\n- **단가 및 요금 정책**: ${m.pricingInput}\n\n${m.name}은(는) 해당 분야에서 널리 활용되는 대표적인 서비스로, 고성능 처리 엔진과 안정적인 인프라를 바탕으로 최적의 작업 효율을 제공합니다.`
+            contentBody: `### ${m.name}: ${m.tagline || '핵심 서비스 및 기술 사양'}\n\n- **제공자 / 분류**: ${m.provider}\n- **출시 / 등록일**: ${m.releaseDate}\n- **주요 규격 / 스펙**: ${m.contextWindow}\n- **단가 및 요금 정책**: ${m.pricingInput}\n\n${m.name}은(는) 해당 분야에서 널리 활용되는 대표적인 서비스로, 고성능 처리 엔진과 안정적인 인프라를 바탕으로 최적의 작업 효율을 제공합니다.`
           };
         } else if (type === 'USAGE') {
           return {
             title: `${m.name} 주요 특징 & 사용법`,
-            contentBody: `### ${m.name} 핵심 활용 가이드\n\n1. **환경 설정**: 공식 API 키 발급 또는 서비스 엔드포인트 등록\n2. **연동 규격**: REST API / SDK / 웹 콘솔을 통한 표준 호출\n3. **모니터링**: AUIGrid 및 사내 관제 대시보드와 지표 동기화\n\n\`\`\`bash\n# ${m.name} 표준 연동 프로토콜\ncurl -X GET "https://api.example.com/${m.modelKey}/status" \\\n     -H "Authorization: Bearer YOUR_TOKEN"\n\`\`\``
+            contentBody: `### ${m.name} 핵심 활용 가이드\n\n1. **환경 설정**: 공식 API 키 발급 또는 서비스 엔드포인트 등록\n2. **연동 규격**: REST API / SDK / 웹 콘솔을 통한 표준 호출\n3. **모니터링**: 실시간 모니터링 시스템과 지표 동기화\n\n\`\`\`bash\n# ${m.name} 표준 연동 프로토콜\ncurl -X GET "https://api.example.com/${m.modelKey}/status" \\\n     -H "Authorization: Bearer YOUR_TOKEN"\n\`\`\``
           };
         } else if (type === 'PROS_CONS') {
           return {
@@ -402,7 +399,7 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
         } else if (type === 'BENCHMARKS') {
           return {
             title: `${m.name} 벤치마크 및 성능 지표`,
-            contentBody: `### ${m.name} 성능 데이터\n\n- 스펙 사양: **${m.contextWindow}**\n- 출력 및 응답 용량: **${m.maxOutput}**\n- 엔터프라이즈 태그: **${m.badge}**\n\n*하단의 AUIGrid 데이터 시트에서 전체 모델군과 다차원 정렬/필터 비교가 가능합니다.*`
+            contentBody: `### ${m.name} 성능 데이터\n\n- 스펙 사양: **${m.contextWindow}**\n- 출력 및 응답 용량: **${m.maxOutput}**\n- 상태 배지: **${m.badge}**\n\n*상세 비교 데이터는 '성능 분석 시트' 탭에서 확인하실 수 있습니다.*`
           };
         } else if (type === 'LINKS') {
           return {
@@ -423,19 +420,16 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
     methods: {
       async initData() {
         try {
-          // Fetch module categories (c, i, f, o)
           const baseModule = this.moduleKey.toLowerCase();
           const catRes = await fetch(`/api/categories?module=${baseModule}`);
           this.categories = await catRes.json();
 
-          // Aggregate all models in this module
           let items = [];
           this.categories.forEach(c => {
             if (c.models) items.push(...c.models);
           });
           this.allModels = items;
 
-          // Default selection: first model
           if (this.allModels.length > 0) {
             await this.selectModel(this.allModels[0].modelKey);
           }
@@ -461,7 +455,6 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
         if (this.flyoutTimer) clearTimeout(this.flyoutTimer);
       },
       async selectModel(modelKey) {
-        this.viewMode = 'model';
         try {
           const res = await fetch(`/api/models/${modelKey}`);
           if (res.ok) {
@@ -484,10 +477,10 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
         const titles = {
           'OVERVIEW': '소개 및 개요',
           'USAGE': '주요 특징 & 사용법',
+          'BENCHMARKS': '성능 분석 시트 (AUIGrid)',
+          'CROSS_EDITOR': '운영 가이드 (CrossEditor)',
           'PROS_CONS': '장단점 비교',
-          'BENCHMARKS': '벤치마크 및 스펙 (AUIGrid)',
-          'LINKS': '공식 연결 링크',
-          'CROSS_EDITOR': '사내 기술문서 (CrossEditor)'
+          'LINKS': '공식 링크'
         };
         return titles[tabKey] || tabKey;
       }
@@ -508,34 +501,14 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
           <div class="plane-search-box">
             <div class="plane-search-input-wrapper">
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-              <input type="text" class="plane-search-input" v-model="searchKeyword" placeholder="대메뉴 및 항목 검색...">
+              <input type="text" class="plane-search-input" v-model="searchKeyword" placeholder="검색...">
             </div>
           </div>
 
-          <!-- Quick Mode Selectors -->
-          <div class="plane-nav-section">
-            <div class="plane-nav-section-title">Views & Tools</div>
-            <ul class="plane-nav-list">
-              <li class="plane-nav-item" :class="{ active: viewMode === 'dashboard' }" @click="viewMode = 'dashboard'; hoveredCategory = null;">
-                <span class="icon">🏠</span>
-                <span>Workspace Overview</span>
-              </li>
-              <li class="plane-nav-item" :class="{ active: viewMode === 'auigrid' }" @click="viewMode = 'auigrid'; hoveredCategory = null;">
-                <span class="icon">▦</span>
-                <span>전사 데이터 시트 (AUIGrid)</span>
-              </li>
-              <li class="plane-nav-item" :class="{ active: viewMode === 'crosseditor' }" @click="viewMode = 'crosseditor'; hoveredCategory = null;">
-                <span class="icon">✎</span>
-                <span>기술 표준 문서 (CrossEditor)</span>
-              </li>
-            </ul>
-          </div>
-
-          <!-- Major Categories (대메뉴) -->
+          <!-- Categories List -->
           <div class="plane-nav-section">
             <div class="plane-nav-section-title">
-              <span>대메뉴 리스트 ({{ filteredCategories.length }}개)</span>
-              <span style="font-size: 10px; color: #94a3b8;">4~5열 Hover</span>
+              <span>카테고리</span>
             </div>
             <ul class="plane-nav-list">
               <li class="plane-nav-item" 
@@ -552,13 +525,14 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
           </div>
 
           <div class="plane-sidebar-footer">
-            <div class="plane-trial-badge">
-              <span>Spring Boot + AUIGrid Active</span>
+            <div class="plane-user-guide-link">
+              <svg style="width:14px;height:14px;color:#64748b;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <span>시스템 도움말</span>
             </div>
           </div>
         </aside>
 
-        <!-- Compact 4~5 Columns Tree Flyout (가로폭 축소, 세부설명 삭제) -->
+        <!-- Compact Tree Flyout Portal -->
         <div class="plane-tree-flyout-portal" 
              v-if="hoveredCategory" 
              :style="{ top: flyoutTop + 'px', left: '326px' }"
@@ -569,14 +543,11 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
             <div class="plane-flyout-title">
               <span>{{ hoveredCategory.icon }}</span>
               <span>{{ hoveredCategory.name }}</span>
-              <span class="plane-flyout-tagline">| {{ hoveredCategory.tagline }}</span>
+              <span class="plane-flyout-tagline" v-if="hoveredCategory.tagline">· {{ hoveredCategory.tagline }}</span>
             </div>
-            <span style="font-size: 11px; color:#2563eb; font-weight:600; background:#eff6ff; padding:2px 7px; border-radius:10px;">
-              {{ hoveredCategory.models ? hoveredCategory.models.length : 0 }} Columns Available
-            </span>
           </div>
 
-          <!-- 4 ~ 5열 횡방향 나열 -->
+          <!-- 4 ~ 5 Columns Horizontal Row -->
           <div class="plane-flyout-models-row">
             <div class="plane-flyout-model-col" v-for="m in hoveredCategory.models" :key="m.id">
               <div class="plane-flyout-model-top" @click="selectModelAndTab(m.modelKey, 'OVERVIEW')">
@@ -584,7 +555,7 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
                 <span class="plane-flyout-model-badge">{{ m.badge || 'Verified' }}</span>
               </div>
 
-              <!-- 하위 서브메뉴 종방향 나열 -->
+              <!-- Sub-menu List under each item (Includes AUIGrid & CrossEditor) -->
               <ul class="plane-flyout-submenu-list">
                 <li class="plane-flyout-submenu-item" 
                     :class="{ current: isCurrentModelAndTab(m.modelKey, 'OVERVIEW') }"
@@ -597,88 +568,44 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
                   <span>💡</span><span>주요 특징 &amp; 사용법</span>
                 </li>
                 <li class="plane-flyout-submenu-item" 
+                    :class="{ current: isCurrentModelAndTab(m.modelKey, 'BENCHMARKS') }"
+                    @click="selectModelAndTab(m.modelKey, 'BENCHMARKS')">
+                  <span>📊</span><span>성능 분석 시트 (AUIGrid)</span>
+                </li>
+                <li class="plane-flyout-submenu-item" 
+                    :class="{ current: isCurrentModelAndTab(m.modelKey, 'CROSS_EDITOR') }"
+                    @click="selectModelAndTab(m.modelKey, 'CROSS_EDITOR')">
+                  <span>📝</span><span>운영 가이드 (CrossEditor)</span>
+                </li>
+                <li class="plane-flyout-submenu-item" 
                     :class="{ current: isCurrentModelAndTab(m.modelKey, 'PROS_CONS') }"
                     @click="selectModelAndTab(m.modelKey, 'PROS_CONS')">
                   <span>⚖️</span><span>장단점 비교</span>
                 </li>
                 <li class="plane-flyout-submenu-item" 
-                    :class="{ current: isCurrentModelAndTab(m.modelKey, 'BENCHMARKS') }"
-                    @click="selectModelAndTab(m.modelKey, 'BENCHMARKS')">
-                  <span>📊</span><span>벤치마크 (AUIGrid)</span>
-                </li>
-                <li class="plane-flyout-submenu-item" 
                     :class="{ current: isCurrentModelAndTab(m.modelKey, 'LINKS') }"
                     @click="selectModelAndTab(m.modelKey, 'LINKS')">
-                  <span>🔗</span><span>공식 연결 링크</span>
+                  <span>🔗</span><span>공식 링크</span>
                 </li>
               </ul>
             </div>
           </div>
         </div>
 
-        <!-- Main Content Area -->
+        <!-- Main Workspace Area -->
         <main class="plane-main">
           <header class="plane-header">
             <div class="plane-breadcrumbs">
               <span>{{ moduleTitle }}</span>
               <span>&gt;</span>
-              <span v-if="viewMode === 'model' && selectedModel">{{ selectedModel.categoryName || selectedModel.provider }}</span>
-              <span v-else-if="viewMode === 'auigrid'">AUIGrid 데이터 분석실</span>
-              <span v-else-if="viewMode === 'crosseditor'">CrossEditor 문서 편집기</span>
-              <span v-else>Executive Overview</span>
+              <span v-if="selectedModel">{{ selectedModel.categoryName || selectedModel.provider }}</span>
               <span>&gt;</span>
-              <span class="crumb-active" v-if="viewMode === 'model' && selectedModel">{{ selectedModel.name }} ({{ getSubTabTitle(activeSubTab) }})</span>
-              <span class="crumb-active" v-else>{{ viewMode.toUpperCase() }}</span>
-            </div>
-            <div class="plane-header-actions">
-              <button class="plane-btn" :class="{ 'plane-btn-primary': viewMode === 'auigrid' }" @click="viewMode = 'auigrid'">
-                <span>▦ AUIGrid</span>
-              </button>
-              <button class="plane-btn" :class="{ 'plane-btn-primary': viewMode === 'crosseditor' }" @click="viewMode = 'crosseditor'">
-                <span>✎ CrossEditor</span>
-              </button>
+              <span class="crumb-active" v-if="selectedModel">{{ selectedModel.name }} · {{ getSubTabTitle(activeSubTab) }}</span>
             </div>
           </header>
 
           <div class="plane-content-body">
-            
-            <!-- AUIGrid View Mode -->
-            <section v-if="viewMode === 'auigrid'" class="plane-card">
-              <h3>전사 데이터 분석 및 통계 (AUIGrid 연동 모드)</h3>
-              <p style="color:#64748b; font-size:13px;">사내 금융/ERP 표준 데이터 그리드 솔루션인 AUIGrid 인터페이스를 통해 대량 데이터를 다차원 정렬, 필터, 엑셀 익스포트합니다.</p>
-              <aui-grid :title="moduleTitle + ' 전체 데이터 시트'" :columns="gridColumns" :rows="allModels" />
-            </section>
-
-            <!-- CrossEditor View Mode -->
-            <section v-else-if="viewMode === 'crosseditor'" class="plane-card">
-              <h3>사내 기술 표준 문서 위지위그 편집기 (CrossEditor)</h3>
-              <p style="color:#64748b; font-size:13px;">한국 표준 나모 크로스에디터 규격의 리치 텍스트 툴바와 HTML 소스/디자인 모드 전환을 제공합니다.</p>
-              <cross-editor v-model="crossEditorHtml" :title="moduleTitle + ' 표준 가이드 에디터'" />
-            </section>
-
-            <!-- Dashboard View Mode -->
-            <section v-else-if="viewMode === 'dashboard'">
-              <div class="plane-model-header">
-                <div>
-                  <h1 class="plane-model-name">{{ moduleTitle }} Overview</h1>
-                  <p class="plane-model-tagline">{{ moduleTagline }}</p>
-                </div>
-              </div>
-              <h3 style="font-size:15px; margin-bottom:12px;">대메뉴 카탈로그</h3>
-              <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:14px;">
-                <div class="plane-card" v-for="cat in categories" :key="cat.id" style="cursor:pointer;" @click="showCategoryFlyout(cat, $event)">
-                  <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                    <span style="font-size:20px;">{{ cat.icon }}</span>
-                    <span class="plane-model-badge">{{ cat.models ? cat.models.length : 0 }} Items</span>
-                  </div>
-                  <h4 style="font-size:15px; margin-bottom:4px;">{{ cat.name }}</h4>
-                  <p style="font-size:12.5px; color:#64748b;">{{ cat.tagline }}</p>
-                </div>
-              </div>
-            </section>
-
-            <!-- Item Detail View Mode -->
-            <section v-else-if="viewMode === 'model' && selectedModel">
+            <section v-if="selectedModel">
               <div class="plane-model-header">
                 <div>
                   <h1 class="plane-model-name">
@@ -689,15 +616,15 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
                 </div>
                 <div class="plane-specs-strip">
                   <div class="plane-spec-chip">
-                    <span class="plane-spec-label">Provider / Type</span>
+                    <span class="plane-spec-label">제공사 / 분류</span>
                     <span class="plane-spec-value">{{ selectedModel.provider }}</span>
                   </div>
                   <div class="plane-spec-chip">
-                    <span class="plane-spec-label">Capacity / Spec</span>
+                    <span class="plane-spec-label">주요 규격 / 스펙</span>
                     <span class="plane-spec-value">{{ selectedModel.contextWindow }}</span>
                   </div>
                   <div class="plane-spec-chip">
-                    <span class="plane-spec-label">Pricing / Tier</span>
+                    <span class="plane-spec-label">요금 / 라이선스</span>
                     <span class="plane-spec-value">{{ selectedModel.pricingInput }}</span>
                   </div>
                 </div>
@@ -711,37 +638,45 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
                 <div class="plane-tab-item" :class="{ active: activeSubTab === 'USAGE' }" @click="activeSubTab = 'USAGE'">
                   <span>💡</span><span>주요 특징 &amp; 사용법</span>
                 </div>
+                <div class="plane-tab-item" :class="{ active: activeSubTab === 'BENCHMARKS' }" @click="activeSubTab = 'BENCHMARKS'">
+                  <span>📊</span><span>성능 분석 시트 (AUIGrid)</span>
+                </div>
+                <div class="plane-tab-item" :class="{ active: activeSubTab === 'CROSS_EDITOR' }" @click="activeSubTab = 'CROSS_EDITOR'">
+                  <span>📝</span><span>운영 가이드 (CrossEditor)</span>
+                </div>
                 <div class="plane-tab-item" :class="{ active: activeSubTab === 'PROS_CONS' }" @click="activeSubTab = 'PROS_CONS'">
                   <span>⚖️</span><span>장단점 비교</span>
                 </div>
-                <div class="plane-tab-item" :class="{ active: activeSubTab === 'BENCHMARKS' }" @click="activeSubTab = 'BENCHMARKS'">
-                  <span>📊</span><span>벤치마크 및 스펙 (AUIGrid)</span>
-                </div>
                 <div class="plane-tab-item" :class="{ active: activeSubTab === 'LINKS' }" @click="activeSubTab = 'LINKS'">
-                  <span>🔗</span><span>공식 연결 링크</span>
-                </div>
-                <div class="plane-tab-item" :class="{ active: activeSubTab === 'CROSS_EDITOR' }" @click="activeSubTab = 'CROSS_EDITOR'">
-                  <span>✎</span><span>사내 기술문서 (CrossEditor)</span>
+                  <span>🔗</span><span>공식 링크</span>
                 </div>
               </nav>
 
-              <!-- Dynamic Sub-menu View -->
-              <div v-if="activeSubTab === 'BENCHMARKS'">
-                <div class="plane-card">
-                  <h3>📊 AUIGrid 데이터 뷰 ({{ selectedModel.name }} 성능 &amp; 지표)</h3>
-                  <aui-grid :title="selectedModel.name + ' 세부 지표 분석'" :columns="gridColumns" :rows="allModels" />
+              <!-- Detailed Sub-menu 1: AUIGrid Component -->
+              <div v-if="activeSubTab === 'BENCHMARKS'" class="plane-card">
+                <div style="margin-bottom:14px;">
+                  <h3 style="font-size:15px; font-weight:700;">📊 {{ selectedModel.name }} 성능 지표 및 비교 분석</h3>
+                  <p style="color:#64748b; font-size:12.5px; margin-top:3px;">
+                    동일 카테고리 및 전체 서비스의 스펙, 릴리즈 시점, 요금제 지표를 실시간으로 비교 분석합니다.
+                  </p>
                 </div>
+                <aui-grid :title="selectedModel.name + ' 성능 분석 시트'" :columns="gridColumns" :rows="allModels" />
               </div>
 
-              <div v-else-if="activeSubTab === 'CROSS_EDITOR'">
-                <div class="plane-card">
-                  <h3>✎ 사내 표준 위지위그 기술문서 (CrossEditor)</h3>
-                  <cross-editor v-model="crossEditorHtml" :title="selectedModel.name + ' 기술 표준서'" />
+              <!-- Detailed Sub-menu 2: CrossEditor Component -->
+              <div v-else-if="activeSubTab === 'CROSS_EDITOR'" class="plane-card">
+                <div style="margin-bottom:14px;">
+                  <h3 style="font-size:15px; font-weight:700;">📝 {{ selectedModel.name }} 표준 가이드 문서</h3>
+                  <p style="color:#64748b; font-size:12.5px; margin-top:3px;">
+                    표준 서식과 표 편집기를 활용하여 운영 및 기술 표준 문서를 편집하고 보관할 수 있습니다.
+                  </p>
                 </div>
+                <cross-editor v-model="crossEditorHtml" :title="selectedModel.name + ' 표준 운영 가이드'" />
               </div>
 
+              <!-- Detailed Sub-menus 3: Markdown Sub-menus -->
               <div v-else-if="currentSubContent" class="plane-card">
-                <h3>{{ currentSubContent.title }}</h3>
+                <h3 style="font-size:16px; margin-bottom:12px;">{{ currentSubContent.title }}</h3>
                 <div class="markdown-body" v-html="renderedMarkdown"></div>
                 
                 <div v-if="activeSubTab === 'PROS_CONS'" class="plane-pros-cons-grid">
