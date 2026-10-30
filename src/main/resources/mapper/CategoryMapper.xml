@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.plane.llmhub.mapper.CategoryMapper">
+
+    <resultMap id="CategoryResultMap" type="com.plane.llmhub.model.Category">
+        <id property="id" column="id"/>
+        <result property="slug" column="slug"/>
+        <result property="name" column="name"/>
+        <result property="icon" column="icon"/>
+        <result property="tagline" column="tagline"/>
+        <result property="displayOrder" column="display_order"/>
+        <collection property="models" ofType="com.plane.llmhub.model.LlmModel" column="id" select="selectModelsForCategory"/>
+    </resultMap>
+
+    <select id="selectAll" resultMap="CategoryResultMap">
+        SELECT id, slug, name, icon, tagline, display_order
+        FROM categories
+        ORDER BY display_order ASC, id ASC
+    </select>
+
+    <select id="selectBySlug" resultMap="CategoryResultMap">
+        SELECT id, slug, name, icon, tagline, display_order
+        FROM categories
+        WHERE slug = #{slug}
+    </select>
+
+    <select id="selectById" resultMap="CategoryResultMap">
+        SELECT id, slug, name, icon, tagline, display_order
+        FROM categories
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectModelsForCategory" resultType="com.plane.llmhub.model.LlmModel">
+        SELECT m.id, m.category_id, m.model_key, m.name, m.provider,
+               m.release_date, m.context_window, m.max_output,
+               m.pricing_input, m.pricing_output, m.badge, m.tagline, m.display_order
+        FROM llm_models m
+        WHERE m.category_id = #{id}
+        ORDER BY m.display_order ASC, m.id ASC
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO categories (slug, name, icon, tagline, display_order)
+        VALUES (#{slug}, #{name}, #{icon}, #{tagline}, #{displayOrder})
+    </insert>
+
+</mapper>

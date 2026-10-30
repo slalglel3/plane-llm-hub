@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.plane.llmhub.mapper.MetricMapper">
+
+    <resultMap id="MetricResultMap" type="com.plane.llmhub.model.ModelMetric">
+        <id property="id" column="id"/>
+        <result property="modelId" column="model_id"/>
+        <result property="benchmarkName" column="benchmark_name"/>
+        <result property="score" column="score"/>
+        <result property="percentVal" column="percent_val"/>
+        <result property="category" column="category"/>
+    </resultMap>
+
+    <select id="selectByModelId" resultMap="MetricResultMap">
+        SELECT id, model_id, benchmark_name, score, percent_val, category
+        FROM model_metrics
+        WHERE model_id = #{modelId}
+        ORDER BY id ASC
+    </select>
+
+    <select id="selectAllLeaderboard" resultMap="MetricResultMap">
+        SELECT id, model_id, benchmark_name, score, percent_val, category
+        FROM model_metrics
+        ORDER BY percent_val DESC
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO model_metrics (model_id, benchmark_name, score, percent_val, category)
+        VALUES (#{modelId}, #{benchmarkName}, #{score}, #{percentVal}, #{category})
+    </insert>
+
+</mapper>

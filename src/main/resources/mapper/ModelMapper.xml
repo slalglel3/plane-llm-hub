@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.plane.llmhub.mapper.ModelMapper">
+
+    <resultMap id="LlmModelResultMap" type="com.plane.llmhub.model.LlmModel">
+        <id property="id" column="id"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="categorySlug" column="category_slug"/>
+        <result property="categoryName" column="category_name"/>
+        <result property="modelKey" column="model_key"/>
+        <result property="name" column="name"/>
+        <result property="provider" column="provider"/>
+        <result property="releaseDate" column="release_date"/>
+        <result property="contextWindow" column="context_window"/>
+        <result property="maxOutput" column="max_output"/>
+        <result property="pricingInput" column="pricing_input"/>
+        <result property="pricingOutput" column="pricing_output"/>
+        <result property="badge" column="badge"/>
+        <result property="tagline" column="tagline"/>
+        <result property="displayOrder" column="display_order"/>
+    </resultMap>
+
+    <sql id="ModelBaseColumns">
+        m.id, m.category_id, c.slug AS category_slug, c.name AS category_name,
+        m.model_key, m.name, m.provider, m.release_date, m.context_window,
+        m.max_output, m.pricing_input, m.pricing_output, m.badge, m.tagline, m.display_order
+    </sql>
+
+    <select id="selectAll" resultMap="LlmModelResultMap">
+        SELECT
+        <include refid="ModelBaseColumns"/>
+        FROM llm_models m
+        LEFT JOIN categories c ON m.category_id = c.id
+        ORDER BY c.display_order ASC, m.display_order ASC, m.id ASC
+    </select>
+
+    <select id="selectByCategoryId" resultMap="LlmModelResultMap">
+        SELECT
+        <include refid="ModelBaseColumns"/>
+        FROM llm_models m
+        LEFT JOIN categories c ON m.category_id = c.id
+        WHERE m.category_id = #{categoryId}
+        ORDER BY m.display_order ASC
+    </select>
+
+    <select id="selectByCategorySlug" resultMap="LlmModelResultMap">
+        SELECT
+        <include refid="ModelBaseColumns"/>
+        FROM llm_models m
+        LEFT JOIN categories c ON m.category_id = c.id
+        WHERE c.slug = #{categorySlug}
+        ORDER BY m.display_order ASC
+    </select>
+
+    <select id="selectByModelKey" resultMap="LlmModelResultMap">
+        SELECT
+        <include refid="ModelBaseColumns"/>
+        FROM llm_models m
+        LEFT JOIN categories c ON m.category_id = c.id
+        WHERE m.model_key = #{modelKey}
+    </select>
+
+    <select id="selectById" resultMap="LlmModelResultMap">
+        SELECT
+        <include refid="ModelBaseColumns"/>
+        FROM llm_models m
+        LEFT JOIN categories c ON m.category_id = c.id
+        WHERE m.id = #{id}
+    </select>
+
+    <select id="searchModels" resultMap="LlmModelResultMap">
+        SELECT
+        <include refid="ModelBaseColumns"/>
+        FROM llm_models m
+        LEFT JOIN categories c ON m.category_id = c.id
+        WHERE LOWER(m.name) LIKE LOWER(CONCAT('%', #{keyword}, '%'))
+           OR LOWER(m.provider) LIKE LOWER(CONCAT('%', #{keyword}, '%'))
+           OR LOWER(m.tagline) LIKE LOWER(CONCAT('%', #{keyword}, '%'))
+           OR LOWER(m.model_key) LIKE LOWER(CONCAT('%', #{keyword}, '%'))
+        ORDER BY m.display_order ASC
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO llm_models (
+            category_id, model_key, name, provider, release_date,
+            context_window, max_output, pricing_input, pricing_output,
+            badge, tagline, display_order
+        ) VALUES (
+            #{categoryId}, #{modelKey}, #{name}, #{provider}, #{releaseDate},
+            #{contextWindow}, #{maxOutput}, #{pricingInput}, #{pricingOutput},
+            #{badge}, #{tagline}, #{displayOrder}
+        )
+    </insert>
+
+</mapper>

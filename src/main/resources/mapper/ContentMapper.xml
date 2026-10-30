@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.plane.llmhub.mapper.ContentMapper">
+
+    <resultMap id="ContentResultMap" type="com.plane.llmhub.model.ModelContent">
+        <id property="id" column="id"/>
+        <result property="modelId" column="model_id"/>
+        <result property="subMenuType" column="sub_menu_type"/>
+        <result property="title" column="title"/>
+        <result property="contentBody" column="content_body"/>
+        <result property="metaJson" column="meta_json"/>
+    </resultMap>
+
+    <select id="selectByModelId" resultMap="ContentResultMap">
+        SELECT id, model_id, sub_menu_type, title, content_body, meta_json
+        FROM model_contents
+        WHERE model_id = #{modelId}
+        ORDER BY
+            CASE sub_menu_type
+                WHEN 'OVERVIEW' THEN 1
+                WHEN 'USAGE' THEN 2
+                WHEN 'PROS_CONS' THEN 3
+                WHEN 'BENCHMARKS' THEN 4
+                WHEN 'LINKS' THEN 5
+                ELSE 6
+            END
+    </select>
+
+    <select id="selectByModelIdAndType" resultMap="ContentResultMap">
+        SELECT id, model_id, sub_menu_type, title, content_body, meta_json
+        FROM model_contents
+        WHERE model_id = #{modelId} AND sub_menu_type = #{subMenuType}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO model_contents (model_id, sub_menu_type, title, content_body, meta_json)
+        VALUES (#{modelId}, #{subMenuType}, #{title}, #{contentBody}, #{metaJson})
+    </insert>
+
+    <update id="update">
+        UPDATE model_contents
+        SET title = #{title},
+            content_body = #{contentBody},
+            meta_json = #{metaJson}
+        WHERE id = #{id}
+    </update>
+
+</mapper>
