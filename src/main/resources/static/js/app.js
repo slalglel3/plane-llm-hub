@@ -308,7 +308,125 @@ Vue.component('cross-editor', {
 });
 
 // ========================================================
-// 3. Factory function for Modular Rail Views (c, i, f, o / C, I, F, O)
+// Global Reactive Favorites Store (Vue.observable)
+// ========================================================
+const DEFAULT_INITIAL_FAVORITES = [
+  {
+    id: 1,
+    modelKey: 'gpt-4o',
+    name: 'GPT-4o (Omni)',
+    badge: 'Omni SOTA',
+    tagline: '멀티모달 옴니 플래그십',
+    provider: 'OpenAI',
+    contextWindow: '128K',
+    pricingInput: '$2.50 / 1M',
+    categoryId: 1,
+    categorySlug: 'openai',
+    categoryName: 'OpenAI',
+    categoryIcon: '⚡',
+    categoryTagline: 'Pioneering frontier intelligence & reasoning models',
+    moduleKey: 'c',
+    subTab: 'BENCHMARKS',
+    subTabTitle: '성능 분석 시트 (AUIGrid)'
+  },
+  {
+    id: 6,
+    modelKey: 'claude-3-7-sonnet',
+    name: 'Claude 3.7 Sonnet',
+    badge: 'Hybrid SOTA',
+    tagline: '업계 최초 하이브리드 추론 플래그십',
+    provider: 'Anthropic',
+    contextWindow: '200K',
+    pricingInput: '$3.00 / 1M',
+    categoryId: 2,
+    categorySlug: 'anthropic',
+    categoryName: 'Anthropic Claude',
+    categoryIcon: '🧠',
+    categoryTagline: 'Safety-first steerable AI & hybrid reasoning models',
+    moduleKey: 'c',
+    subTab: 'CROSS_EDITOR',
+    subTabTitle: '운영 가이드 (CrossEditor)'
+  },
+  {
+    id: 101,
+    modelKey: 'site-google',
+    name: 'Google (구글)',
+    badge: 'Portal #1',
+    tagline: '글로벌 표준 검색 엔진 및 통합 플랫폼',
+    provider: 'Google LLC',
+    contextWindow: 'Search & Cloud',
+    pricingInput: 'Free / Ads',
+    categoryId: 101,
+    categorySlug: 'i-search',
+    categoryName: '포털 & 검색 엔진',
+    categoryIcon: '🔍',
+    categoryTagline: '글로벌 정보 인덱싱과 스마트 웹 서칭 포털',
+    moduleKey: 'i',
+    subTab: 'OVERVIEW',
+    subTabTitle: '소개 및 개요'
+  }
+];
+
+const FavoritesStore = Vue.observable({
+  list: (function() {
+    try {
+      const saved = localStorage.getItem('plane_favorites_v3');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+    return DEFAULT_INITIAL_FAVORITES;
+  })(),
+  save() {
+    try {
+      localStorage.setItem('plane_favorites_v3', JSON.stringify(this.list));
+    } catch (e) {}
+  },
+  isFavorite(modelKey, subTab) {
+    if (!modelKey) return false;
+    return this.list.some(f => f.modelKey === modelKey && (!subTab || f.subTab === subTab));
+  },
+  toggleFavorite(model, category, moduleKey, subTab) {
+    if (!model) return;
+    const effectiveSubTab = subTab || 'OVERVIEW';
+    const idx = this.list.findIndex(f => f.modelKey === model.modelKey && f.subTab === effectiveSubTab);
+    if (idx >= 0) {
+      this.list.splice(idx, 1);
+    } else {
+      const titles = {
+        'OVERVIEW': '소개 및 개요',
+        'USAGE': '주요 특징 & 사용법',
+        'BENCHMARKS': '성능 분석 시트 (AUIGrid)',
+        'CROSS_EDITOR': '운영 가이드 (CrossEditor)',
+        'PROS_CONS': '장단점 비교',
+        'LINKS': '공식 링크'
+      };
+      this.list.push({
+        id: model.id,
+        modelKey: model.modelKey,
+        name: model.name,
+        badge: model.badge || 'Verified',
+        tagline: model.tagline || '',
+        provider: model.provider || '',
+        contextWindow: model.contextWindow || '',
+        pricingInput: model.pricingInput || '',
+        categoryId: category ? category.id : (model.categoryId || 1),
+        categorySlug: category ? category.slug : 'fav',
+        categoryName: category ? category.name : (model.categoryName || model.provider || '즐겨찾기'),
+        categoryIcon: category ? category.icon : '★',
+        categoryTagline: category ? category.tagline : '즐겨찾는 주요 메뉴',
+        moduleKey: moduleKey || 'c',
+        subTab: effectiveSubTab,
+        subTabTitle: titles[effectiveSubTab] || effectiveSubTab
+      });
+    }
+    this.save();
+  }
+});
+
+// ========================================================
+// 3. Factory function for Modular Rail Views (c, i, f, o / C, I, F, O / favorites)
 // ========================================================
 function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
   return {
@@ -317,14 +435,14 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
         moduleKey: moduleKey,
         moduleTitle: moduleTitle,
         moduleTagline: moduleTagline,
-        categories: [],
-        allModels: [],
+        rawCategories: [],
         selectedModel: null,
         activeSubTab: 'OVERVIEW',
         hoveredCategory: null,
         flyoutTop: 120,
         flyoutTimer: null,
         searchKeyword: '',
+        isCategoryCollapsed: false,
         
         // AUIGrid Columns
         gridColumns: [
@@ -363,6 +481,43 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
       };
     },
     computed: {
+      categories() {
+        if (this.moduleKey === 'favorites') {
+          const items = FavoritesStore.list;
+          const map = new Map();
+          items.forEach(item => {
+            const cId = item.categoryId || 999;
+            if (!map.has(cId)) {
+              map.set(cId, {
+                id: cId,
+                slug: item.categorySlug || 'fav',
+                name: item.categoryName || item.provider || '즐겨찾기',
+                icon: item.categoryIcon || '★',
+                tagline: item.categoryTagline || '즐겨찾는 주요 메뉴',
+                models: []
+              });
+            }
+            const cat = map.get(cId);
+            if (!cat.models.some(m => m.modelKey === item.modelKey)) {
+              cat.models.push({
+                id: item.id,
+                modelKey: item.modelKey,
+                name: item.name,
+                badge: item.badge,
+                tagline: item.tagline,
+                provider: item.provider,
+                contextWindow: item.contextWindow,
+                pricingInput: item.pricingInput,
+                categoryId: cId,
+                categoryName: cat.name,
+                favSubTab: item.subTab
+              });
+            }
+          });
+          return Array.from(map.values());
+        }
+        return this.rawCategories;
+      },
       filteredCategories() {
         if (!this.searchKeyword.trim()) return this.categories;
         const kw = this.searchKeyword.toLowerCase();
@@ -371,6 +526,16 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
           const matchM = c.models && c.models.some(m => m.name.toLowerCase().includes(kw));
           return matchCat || matchM;
         });
+      },
+      allModels() {
+        let items = [];
+        this.categories.forEach(c => {
+          if (c.models) items.push(...c.models);
+        });
+        return items;
+      },
+      favoriteList() {
+        return FavoritesStore.list;
       },
       currentSubContent() {
         if (!this.selectedModel) return null;
@@ -420,15 +585,17 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
     methods: {
       async initData() {
         try {
+          if (this.moduleKey === 'favorites') {
+            if (this.allModels.length > 0) {
+              const first = this.allModels[0];
+              await this.selectModel(first.modelKey);
+              if (first.favSubTab) this.activeSubTab = first.favSubTab;
+            }
+            return;
+          }
           const baseModule = this.moduleKey.toLowerCase();
           const catRes = await fetch(`/api/categories?module=${baseModule}`);
-          this.categories = await catRes.json();
-
-          let items = [];
-          this.categories.forEach(c => {
-            if (c.models) items.push(...c.models);
-          });
-          this.allModels = items;
+          this.rawCategories = await catRes.json();
 
           if (this.allModels.length > 0) {
             await this.selectModel(this.allModels[0].modelKey);
@@ -483,6 +650,30 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
           'LINKS': '공식 링크'
         };
         return titles[tabKey] || tabKey;
+      },
+      isFavorite(model, subTab) {
+        if (!model) return false;
+        return FavoritesStore.isFavorite(model.modelKey, subTab);
+      },
+      toggleFavorite(model, subTab) {
+        if (!model) return;
+        const cat = this.categories.find(c => c.id === model.categoryId) || {
+          id: model.categoryId,
+          name: model.categoryName || model.provider,
+          icon: '★'
+        };
+        FavoritesStore.toggleFavorite(model, cat, this.moduleKey, subTab);
+        if (this.moduleKey === 'favorites') {
+          this.$nextTick(() => {
+            if (this.allModels.length > 0) {
+              if (!this.selectedModel || !this.allModels.some(m => m.modelKey === this.selectedModel.modelKey)) {
+                this.selectModel(this.allModels[0].modelKey);
+              }
+            } else {
+              this.selectedModel = null;
+            }
+          });
+        }
       }
     },
     template: `
@@ -505,12 +696,23 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
             </div>
           </div>
 
-          <!-- Categories List -->
+          <!-- Categories Section with Collapse/Expand Toggle (대메뉴 접고 펴기) -->
           <div class="plane-nav-section">
-            <div class="plane-nav-section-title">
-              <span>카테고리</span>
+            <div class="plane-nav-section-title" @click="isCategoryCollapsed = !isCategoryCollapsed" style="cursor:pointer; user-select:none;">
+              <div style="display:flex; align-items:center; gap:6px;">
+                <svg :style="{ transform: isCategoryCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)', transition: 'transform 0.18s ease' }" 
+                     style="width:12px;height:12px;color:#94a3b8;" 
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+                <span>{{ moduleKey === 'favorites' ? '즐겨찾기 대메뉴' : '카테고리' }}</span>
+              </div>
+              <span class="plane-collapse-badge">
+                {{ isCategoryCollapsed ? '펼치기' : '접기' }}
+              </span>
             </div>
-            <ul class="plane-nav-list">
+
+            <ul class="plane-nav-list" v-show="!isCategoryCollapsed">
               <li class="plane-nav-item" 
                   v-for="cat in filteredCategories" 
                   :key="cat.id"
@@ -520,6 +722,9 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
                 <span class="icon">{{ cat.icon }}</span>
                 <span style="font-weight:600; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ cat.name }}</span>
                 <svg class="chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+              </li>
+              <li v-if="filteredCategories.length === 0" style="padding:18px 12px; text-align:center; color:#94a3b8; font-size:12px;">
+                등록된 항목이 없습니다.
               </li>
             </ul>
           </div>
@@ -609,47 +814,97 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
               
               <!-- Sub-menu 1: AUIGrid Component View -->
               <div v-if="activeSubTab === 'BENCHMARKS'" class="plane-card">
-                <div style="margin-bottom:14px;">
-                  <h2 style="font-size:17px; font-weight:700; color:#0f172a;">📊 {{ selectedModel.name }} - 성능 분석 시트</h2>
-                  <p style="color:#64748b; font-size:12.5px; margin-top:3px;">
-                    동일 카테고리 및 전체 서비스의 스펙, 릴리즈 시점, 요금제 지표를 실시간으로 비교 분석합니다.
-                  </p>
+                <div style="margin-bottom:14px; display:flex; align-items:flex-start; gap:10px;">
+                  <button class="plane-star-btn" 
+                          :class="{ active: isFavorite(selectedModel, activeSubTab) }" 
+                          @click="toggleFavorite(selectedModel, activeSubTab)" 
+                          :title="isFavorite(selectedModel, activeSubTab) ? '즐겨찾기 해제' : '즐겨찾기 추가'">
+                    <svg style="width:22px; height:22px;" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                    </svg>
+                  </button>
+                  <div>
+                    <h2 style="font-size:17px; font-weight:700; color:#0f172a;">📊 {{ selectedModel.name }} - 성능 분석 시트</h2>
+                    <p style="color:#64748b; font-size:12.5px; margin-top:3px;">
+                      동일 카테고리 및 전체 서비스의 스펙, 릴리즈 시점, 요금제 지표를 실시간으로 비교 분석합니다.
+                    </p>
+                  </div>
                 </div>
                 <aui-grid :title="selectedModel.name + ' 성능 분석 시트'" :columns="gridColumns" :rows="allModels" />
               </div>
 
               <!-- Sub-menu 2: CrossEditor Component View -->
               <div v-else-if="activeSubTab === 'CROSS_EDITOR'" class="plane-card">
-                <div style="margin-bottom:14px;">
-                  <h2 style="font-size:17px; font-weight:700; color:#0f172a;">📝 {{ selectedModel.name }} - 운영 가이드 문서</h2>
-                  <p style="color:#64748b; font-size:12.5px; margin-top:3px;">
-                    표준 서식과 표 편집기를 활용하여 운영 및 기술 표준 문서를 편집하고 보관할 수 있습니다.
-                  </p>
+                <div style="margin-bottom:14px; display:flex; align-items:flex-start; gap:10px;">
+                  <button class="plane-star-btn" 
+                          :class="{ active: isFavorite(selectedModel, activeSubTab) }" 
+                          @click="toggleFavorite(selectedModel, activeSubTab)" 
+                          :title="isFavorite(selectedModel, activeSubTab) ? '즐겨찾기 해제' : '즐겨찾기 추가'">
+                    <svg style="width:22px; height:22px;" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                    </svg>
+                  </button>
+                  <div>
+                    <h2 style="font-size:17px; font-weight:700; color:#0f172a;">📝 {{ selectedModel.name }} - 운영 가이드 문서</h2>
+                    <p style="color:#64748b; font-size:12.5px; margin-top:3px;">
+                      표준 서식과 표 편집기를 활용하여 운영 및 기술 표준 문서를 편집하고 보관할 수 있습니다.
+                    </p>
+                  </div>
                 </div>
                 <cross-editor v-model="crossEditorHtml" :title="selectedModel.name + ' 표준 운영 가이드'" />
               </div>
 
               <!-- Sub-menu 3: Overview Sub-menu View -->
               <div v-else-if="activeSubTab === 'OVERVIEW'" class="plane-card">
-                <h2 style="font-size:18px; font-weight:700; color:#0f172a; margin-bottom:14px; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
-                  📌 {{ currentSubContent ? currentSubContent.title : (selectedModel.name + ' 소개 및 개요') }}
-                </h2>
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
+                  <button class="plane-star-btn" 
+                          :class="{ active: isFavorite(selectedModel, activeSubTab) }" 
+                          @click="toggleFavorite(selectedModel, activeSubTab)" 
+                          :title="isFavorite(selectedModel, activeSubTab) ? '즐겨찾기 해제' : '즐겨찾기 추가'">
+                    <svg style="width:22px; height:22px;" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                    </svg>
+                  </button>
+                  <h2 style="font-size:18px; font-weight:700; color:#0f172a; margin:0;">
+                    📌 {{ currentSubContent ? currentSubContent.title : (selectedModel.name + ' 소개 및 개요') }}
+                  </h2>
+                </div>
                 <div class="markdown-body" v-html="renderedMarkdown"></div>
               </div>
 
               <!-- Sub-menu 4: Usage Sub-menu View -->
               <div v-else-if="activeSubTab === 'USAGE'" class="plane-card">
-                <h2 style="font-size:18px; font-weight:700; color:#0f172a; margin-bottom:14px; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
-                  💡 {{ currentSubContent ? currentSubContent.title : (selectedModel.name + ' 주요 특징 & 사용법') }}
-                </h2>
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
+                  <button class="plane-star-btn" 
+                          :class="{ active: isFavorite(selectedModel, activeSubTab) }" 
+                          @click="toggleFavorite(selectedModel, activeSubTab)" 
+                          :title="isFavorite(selectedModel, activeSubTab) ? '즐겨찾기 해제' : '즐겨찾기 추가'">
+                    <svg style="width:22px; height:22px;" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                    </svg>
+                  </button>
+                  <h2 style="font-size:18px; font-weight:700; color:#0f172a; margin:0;">
+                    💡 {{ currentSubContent ? currentSubContent.title : (selectedModel.name + ' 주요 특징 & 사용법') }}
+                  </h2>
+                </div>
                 <div class="markdown-body" v-html="renderedMarkdown"></div>
               </div>
 
               <!-- Sub-menu 5: Pros & Cons Sub-menu View -->
               <div v-else-if="activeSubTab === 'PROS_CONS'" class="plane-card">
-                <h2 style="font-size:18px; font-weight:700; color:#0f172a; margin-bottom:14px; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
-                  ⚖️ {{ currentSubContent ? currentSubContent.title : (selectedModel.name + ' 장단점 비교') }}
-                </h2>
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
+                  <button class="plane-star-btn" 
+                          :class="{ active: isFavorite(selectedModel, activeSubTab) }" 
+                          @click="toggleFavorite(selectedModel, activeSubTab)" 
+                          :title="isFavorite(selectedModel, activeSubTab) ? '즐겨찾기 해제' : '즐겨찾기 추가'">
+                    <svg style="width:22px; height:22px;" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                    </svg>
+                  </button>
+                  <h2 style="font-size:18px; font-weight:700; color:#0f172a; margin:0;">
+                    ⚖️ {{ currentSubContent ? currentSubContent.title : (selectedModel.name + ' 장단점 비교') }}
+                  </h2>
+                </div>
                 <div class="markdown-body" v-html="renderedMarkdown"></div>
                 <div class="plane-pros-cons-grid" style="margin-top:18px;">
                   <div class="plane-pros-card">
@@ -665,9 +920,19 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
 
               <!-- Sub-menu 6: Links Sub-menu View -->
               <div v-else-if="activeSubTab === 'LINKS'" class="plane-card">
-                <h2 style="font-size:18px; font-weight:700; color:#0f172a; margin-bottom:14px; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
-                  🔗 {{ currentSubContent ? currentSubContent.title : (selectedModel.name + ' 공식 링크') }}
-                </h2>
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
+                  <button class="plane-star-btn" 
+                          :class="{ active: isFavorite(selectedModel, activeSubTab) }" 
+                          @click="toggleFavorite(selectedModel, activeSubTab)" 
+                          :title="isFavorite(selectedModel, activeSubTab) ? '즐겨찾기 해제' : '즐겨찾기 추가'">
+                    <svg style="width:22px; height:22px;" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                    </svg>
+                  </button>
+                  <h2 style="font-size:18px; font-weight:700; color:#0f172a; margin:0;">
+                    🔗 {{ currentSubContent ? currentSubContent.title : (selectedModel.name + ' 공식 링크') }}
+                  </h2>
+                </div>
                 <div class="markdown-body" v-html="renderedMarkdown"></div>
               </div>
 
@@ -683,6 +948,18 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
               </div>
 
             </section>
+            
+            <!-- Empty state for Favorites when no items are starred -->
+            <section v-else class="plane-card" style="text-align:center; padding:60px 20px;">
+              <div style="font-size:48px; margin-bottom:14px; color:#f59e0b;">★</div>
+              <h3 style="font-size:18px; font-weight:700; color:#1e293b; margin-bottom:8px;">등록된 즐겨찾기 메뉴가 없습니다</h3>
+              <p style="color:#64748b; font-size:13.5px; max-width:440px; margin:0 auto 20px auto; line-height:1.6;">
+                각 세부 메뉴 페이지의 제목 왼쪽에 위치한 별표(☆)를 누르면 언제든지 이 곳에서 즐겨찾기 대메뉴로 빠르게 모아볼 수 있습니다.
+              </p>
+              <button class="plane-btn plane-btn-primary" @click="$root.selectRailItem('c')">
+                <span>⚡ Frontier LLM Hub 둘러보기</span>
+              </button>
+            </section>
           </div>
         </main>
       </div>
@@ -691,8 +968,11 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
 }
 
 // ========================================================
-// 4. Register Distinct Components for c, i, f, o and C, I, F, O
+// 4. Register Distinct Components for c, i, f, o / C, I, F, O / Favorites
 // ========================================================
+// [Favorites]: Registered Favorites Menu Module
+Vue.component('component-favorites', createModuleComponent('favorites', '즐겨찾기 (Favorites)', '사용자가 별표로 등록한 맞춤형 대메뉴 및 세부 화면'));
+
 // [c & C]: LLM Foundation Models
 Vue.component('component-c', createModuleComponent('c', 'c-TTTM (Frontier LLM Hub)', '차세대 프론티어 대형 언어 모델 및 추론 아키텍처'));
 Vue.component('component-C', createModuleComponent('C', 'C-TTTM (Enterprise LLM Cluster)', '사내 전용 프라이빗 엔터프라이즈 대형 언어 모델 클러스터'));
@@ -721,7 +1001,7 @@ new Vue({
   computed: {
     activeComponentName() {
       if (this.currentRailView === 'favorites') {
-        return 'component-c';
+        return 'component-favorites';
       }
       return 'component-' + this.currentRailView;
     }
