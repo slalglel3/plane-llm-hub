@@ -58,7 +58,8 @@
 plane-llm-hub/
 ├── mvnw / mvnw.cmd                       # Maven Wrapper (Linux/macOS/Windows)
 ├── run.sh                                # Linux / macOS 원클릭 실행 스크립트
-├── run.bat                               # Windows 원클릭 실행 스크립트
+├── run.bat                               # Windows CMD 원클릭 실행 스크립트
+├── run.ps1                               # Windows PowerShell 실행 스크립트
 ├── pom.xml                               # Spring Boot 및 MyBatis 의존성 정의
 ├── README.md
 ├── src/
@@ -116,10 +117,15 @@ chmod +x run.sh
    git clone https://github.com/slalglel3/plane-llm-hub.git
    cd plane-llm-hub
    ```
-2. 탐색기에서 **`run.bat`** 파일을 더블클릭하거나 CMD 콘솔에서 실행합니다:
-   ```cmd
-   run.bat
-   ```
+2. 탐색기에서 **`run.bat`** 파일을 더블클릭하거나 콘솔에서 실행합니다:
+   - **명령 프롬프트 (CMD)**:
+     ```cmd
+     run.bat
+     ```
+   - **PowerShell**:
+     ```powershell
+     .\run.ps1
+     ```
 
 ---
 
