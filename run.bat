@@ -1,8 +1,7 @@
 @echo off
-setlocal enabledelayedexpansion
+setlocal
 chcp 65001 >nul
 cd /d "%~dp0"
-
 title Plane LLM Hub
 
 echo ==================================================================
@@ -11,74 +10,57 @@ echo   Vue2 + Spring Boot 2.7 + MyBatis XML + Embedded H2
 echo ==================================================================
 echo.
 
-rem 1. Check if java command is available
+rem Step 1: Detect Java executable
 set "JAVA_EXE="
 
 where java >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    set "JAVA_EXE=java"
-    goto :JAVA_CHECK_DONE
-)
+if %ERRORLEVEL% EQU 0 set "JAVA_EXE=java"
+if defined JAVA_EXE goto :FOUND_JAVA
 
 if defined JAVA_HOME (
     set "CLEAN_JH=%JAVA_HOME:"=%"
-    if exist "!CLEAN_JH!\bin\java.exe" (
-        set "JAVA_EXE=!CLEAN_JH!\bin\java.exe"
-        goto :JAVA_CHECK_DONE
-    )
+    if exist "%CLEAN_JH%\bin\java.exe" set "JAVA_EXE=%CLEAN_JH%\bin\java.exe"
 )
+if defined JAVA_EXE goto :FOUND_JAVA
 
-for %%D in (
-    "C:\Program Files\Eclipse Adoptium\jdk-*"
-    "C:\Program Files\Java\jdk-*"
-    "C:\Program Files\Amazon Corretto\jdk*"
-    "C:\Program Files\Zulu\zulu-*"
-    "C:\Program Files\Microsoft\jdk-*"
-    "C:\Users\%USERNAME%\.jdks\*"
-    "C:\Program Files\BellSoft\LibericaJDK-*"
-) do (
+for %%D in ("C:\Program Files\Eclipse Adoptium\jdk-*" "C:\Program Files\Java\jdk-*" "C:\Program Files\Amazon Corretto\jdk*" "C:\Program Files\Zulu\zulu-*" "C:\Program Files\Microsoft\jdk-*" "C:\Users\%USERNAME%\.jdks\*") do (
     for /d %%P in (%%D) do (
-        if not defined JAVA_EXE (
-            if exist "%%P\bin\java.exe" (
-                set "JAVA_EXE=%%P\bin\java.exe"
-            )
-        )
+        if exist "%%P\bin\java.exe" set "JAVA_EXE=%%P\bin\java.exe"
     )
 )
+if defined JAVA_EXE goto :FOUND_JAVA
 
-if not defined JAVA_EXE (
-    echo [ERROR] Java 17+ or Java 20/21 is required but was not found.
-    echo Please install OpenJDK and ensure java is in your PATH.
-    echo.
-    pause
-    exit /b 1
-)
+echo [ERROR] Java 17+ or Java 20/21 is required but was not found.
+echo Please install OpenJDK and ensure java is in your PATH.
+echo.
+pause
+exit /b 1
 
-:JAVA_CHECK_DONE
-echo [INFO] Java detected:
+:FOUND_JAVA
+echo [INFO] Java runtime:
 "%JAVA_EXE%" -version
 echo.
 
-rem 2. Launch Standalone Fat JAR if present (Zero-dependency mode)
-if exist "plane-llm-hub-1.0.0.jar" (
-    echo [INFO] Pre-built JAR (plane-llm-hub-1.0.0.jar) detected.
-    echo [INFO] Starting Spring Boot application directly on port 8080...
-    echo [INFO] Once started, open your browser at: http://localhost:8080/
-    echo ------------------------------------------------------------------
-    echo.
-    "%JAVA_EXE%" -jar "plane-llm-hub-1.0.0.jar"
-    echo.
-    echo [INFO] Application process terminated.
-    pause
-    exit /b !ERRORLEVEL!
-)
+rem Step 2: Check for standalone JAR
+if not exist "plane-llm-hub-1.0.0.jar" goto :RUN_MAVEN
 
-rem 3. Fallback: Build and run via Maven
+echo [INFO] Pre-built JAR detected: plane-llm-hub-1.0.0.jar
+echo [INFO] Starting Spring Boot application on port 8080...
+echo [INFO] Open your browser at: http://localhost:8080/
+echo ------------------------------------------------------------------
+echo.
+
+"%JAVA_EXE%" -jar "plane-llm-hub-1.0.0.jar"
+
+echo.
+echo [INFO] Application process terminated.
+pause
+exit /b 0
+
+:RUN_MAVEN
 set "MVN_CMD=mvnw.cmd"
 where mvn >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    set "MVN_CMD=mvn"
-)
+if %ERRORLEVEL% EQU 0 set "MVN_CMD=mvn"
 
 echo [INFO] Starting application via Maven: %MVN_CMD%
 echo [INFO] Once started, open your browser at: http://localhost:8080/
