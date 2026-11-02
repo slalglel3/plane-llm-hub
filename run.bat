@@ -46,8 +46,14 @@ if not exist "plane-llm-hub-1.0.0.jar" goto :RUN_MAVEN
 
 echo [INFO] Pre-built JAR detected: plane-llm-hub-1.0.0.jar
 echo [INFO] Starting Spring Boot application on port 8080...
-echo [INFO] Open your browser at: http://localhost:8080/
+echo ==================================================================
+echo [INFO] Web Browser Access URL:
+echo [INFO]   http://127.0.0.1:8080/  (RECOMMENDED: Bypasses 사내 Edge IE Mode)
+echo [INFO]   http://localhost:8080/
 echo ------------------------------------------------------------------
+echo [TIP] 사내 PC Edge 주소창에 파란색 Internet Explorer(e) 아이콘이 뜨며
+echo       화면이 깨질 경우 반드시 http://127.0.0.1:8080/ 으로 접속하세요.
+echo ==================================================================
 echo.
 
 "%JAVA_EXE%" -jar "plane-llm-hub-1.0.0.jar"
@@ -63,8 +69,14 @@ where mvn >nul 2>&1
 if %ERRORLEVEL% EQU 0 set "MVN_CMD=mvn"
 
 echo [INFO] Starting application via Maven: %MVN_CMD%
-echo [INFO] Once started, open your browser at: http://localhost:8080/
+echo ==================================================================
+echo [INFO] Web Browser Access URL:
+echo [INFO]   http://127.0.0.1:8080/  (RECOMMENDED: Bypasses 사내 Edge IE Mode)
+echo [INFO]   http://localhost:8080/
 echo ------------------------------------------------------------------
+echo [TIP] 사내 PC Edge 주소창에 파란색 Internet Explorer(e) 아이콘이 뜨며
+echo       화면이 깨질 경우 반드시 http://127.0.0.1:8080/ 으로 접속하세요.
+echo ==================================================================
 echo.
 
 call %MVN_CMD% spring-boot:run
