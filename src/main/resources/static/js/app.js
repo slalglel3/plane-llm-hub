@@ -426,7 +426,7 @@ const FavoritesStore = Vue.observable({
 });
 
 // ========================================================
-// 3. Top Cascading Locations & Calendar Preset Constants
+// 3. Top Cascading Locations & Sub-Menu Specific Filter Configs
 // ========================================================
 const CASCADING_LOCATIONS = {
   KR: {
@@ -495,8 +495,337 @@ function formatLocalDateIso(d) {
   return `${y}-${m}-${day}`;
 }
 
+const SUB_MENU_FILTER_CONFIGS = {
+  BENCHMARKS: {
+    badge: "성능 분석 전용 필터",
+    countryLabel: "분석 대상 국가",
+    cityLabel: "데이터 수집 거점 (시/도)",
+    envLabel: "측정 인프라 환경",
+    periodLabel: "성능 측정 기간",
+    envOptions: [
+      { code: "ALL", name: "전체 (Select All)" },
+      { code: "PROD", name: "실서비스 클러스터 (Production)" },
+      { code: "BENCH", name: "벤치마크 랩 (Benchmark Lab)" },
+      { code: "GPU_A100", name: "A100/H100 가속 노드" },
+      { code: "EDGE", name: "온디바이스 엣지 노드" }
+    ]
+  },
+  CROSS_EDITOR: {
+    badge: "문서 운영 전용 필터",
+    countryLabel: "문서 적용 국가",
+    cityLabel: "관할 행정구역 (시/도)",
+    envLabel: "문서 배포 상태",
+    periodLabel: "가이드 개정 기간",
+    envOptions: [
+      { code: "ALL", name: "전체 (Select All)" },
+      { code: "APPROVED", name: "공식 승인 완료 (Approved)" },
+      { code: "DRAFT", name: "초안 작성 중 (Draft)" },
+      { code: "REVIEW", name: "검토 진행 중 (In Review)" },
+      { code: "ARCHIVED", name: "보관/이전 문서 (Archived)" }
+    ]
+  },
+  OVERVIEW: {
+    badge: "서비스 개요 전용 필터",
+    countryLabel: "서비스 제공 국가",
+    cityLabel: "서비스 리전 (시/도)",
+    envLabel: "서비스 운영 상태",
+    periodLabel: "출시 및 릴리즈 기간",
+    envOptions: [
+      { code: "ALL", name: "전체 (Select All)" },
+      { code: "ACTIVE", name: "활성 서비스 (Active)" },
+      { code: "BETA", name: "공개 베타 (Public Beta)" },
+      { code: "ENTERPRISE", name: "엔터프라이즈 전용 (Enterprise Only)" },
+      { code: "MAINT", name: "정기 점검 중 (Maintenance)" }
+    ]
+  },
+  USAGE: {
+    badge: "활용 가이드 전용 필터",
+    countryLabel: "API 게이트웨이 국가",
+    cityLabel: "연동 엔드포인트 (시/도)",
+    envLabel: "연동 프로토콜 / 환경",
+    periodLabel: "트래픽 조회 기간",
+    envOptions: [
+      { code: "ALL", name: "전체 (Select All)" },
+      { code: "REST", name: "RESTful API v1/v2" },
+      { code: "GRPC", name: "gRPC 고속 스트리밍" },
+      { code: "SDK", name: "공식 클라이언트 SDK" },
+      { code: "WEBHOOK", name: "웹훅 이벤트 연동" }
+    ]
+  },
+  PROS_CONS: {
+    badge: "비교 분석 전용 필터",
+    countryLabel: "평가 대상 국가",
+    cityLabel: "시장 분석 지역 (시/도)",
+    envLabel: "도입 검토 단계",
+    periodLabel: "평가 지표 수집 기간",
+    envOptions: [
+      { code: "ALL", name: "전체 (Select All)" },
+      { code: "POC", name: "개념 검증 (PoC)" },
+      { code: "PILOT", name: "파일럿 테스트 (Pilot)" },
+      { code: "ADOPTED", name: "전사 표준 채택 (Adopted)" },
+      { code: "HOLD", name: "도입 보류 (On Hold)" }
+    ]
+  },
+  LINKS: {
+    badge: "리소스 포털 전용 필터",
+    countryLabel: "포털 제공 국가",
+    cityLabel: "지사 및 관할 센터 (시/도)",
+    envLabel: "리소스 분류 유형",
+    periodLabel: "자료 갱신 기간",
+    envOptions: [
+      { code: "ALL", name: "전체 (Select All)" },
+      { code: "DOCS", name: "기술 및 API 문서 (Docs)" },
+      { code: "PORTAL", name: "공식 관리자 콘솔 (Portal)" },
+      { code: "COMMUNITY", name: "개발자 커뮤니티 (Community)" },
+      { code: "STATUS", name: "실시간 가용성 현황판 (Status)" }
+    ]
+  }
+};
+
 // ========================================================
-// 4. Factory function for Modular Rail Views (c, i, f, o / C, I, F, O / favorites)
+// 4. Sub-Menu Dedicated Filter Component (각 소메뉴별 맞춤형 콤보리스트)
+// ========================================================
+Vue.component("menu-filter-bar", {
+  props: {
+    menuKey: { type: String, required: true },
+    config: {
+      type: Object,
+      default: () => ({
+        badge: "소메뉴 맞춤 필터",
+        countryLabel: "국가 (Country)",
+        cityLabel: "시/도 (City/State)",
+        envLabel: "운영 환경 / 상태",
+        periodLabel: "조회 기간 (Calendar)",
+        envOptions: [{ code: "ALL", name: "전체 (Select All)" }]
+      })
+    }
+  },
+  data() {
+    return {
+      filterCountry: "KR",
+      filterCity: "ALL",
+      filterEnv: "ALL",
+      filterPeriod: "7DAYS",
+      filterStartDate: "",
+      filterEndDate: "",
+      filterValidationWarning: false,
+      filterSummaryText: ""
+    };
+  },
+  computed: {
+    countryLabel() { return this.config.countryLabel || "국가 (Country)"; },
+    cityLabel() { return this.config.cityLabel || "시/도 (City/State)"; },
+    envLabel() { return this.config.envLabel || "운영 환경 / 상태"; },
+    periodLabel() { return this.config.periodLabel || "조회 기간 (Calendar)"; },
+    badge() { return this.config.badge || "소메뉴 맞춤 필터"; },
+    envOptions() {
+      return this.config.envOptions || [{ code: "ALL", name: "전체 (Select All)" }];
+    },
+    cityOptions() {
+      if (!this.filterCountry || !CASCADING_LOCATIONS[this.filterCountry]) {
+        return [{ code: "ALL", name: "전체 (Select All)" }];
+      }
+      return CASCADING_LOCATIONS[this.filterCountry].cities;
+    }
+  },
+  created() {
+    this.initFilterDates();
+    this.applyFilter();
+  },
+  methods: {
+    initFilterDates() {
+      const today = new Date();
+      const past = new Date();
+      past.setDate(today.getDate() - 7);
+      this.filterStartDate = formatLocalDateIso(past);
+      this.filterEndDate = formatLocalDateIso(today);
+    },
+    onCountryChange() {
+      this.filterValidationWarning = false;
+      this.filterCity = "ALL";
+      this.applyFilter();
+    },
+    onPeriodPresetChange() {
+      const today = new Date();
+      if (this.filterPeriod === "TODAY") {
+        this.filterStartDate = formatLocalDateIso(today);
+        this.filterEndDate = formatLocalDateIso(today);
+      } else if (this.filterPeriod === "7DAYS") {
+        const past = new Date();
+        past.setDate(today.getDate() - 7);
+        this.filterStartDate = formatLocalDateIso(past);
+        this.filterEndDate = formatLocalDateIso(today);
+      } else if (this.filterPeriod === "30DAYS") {
+        const past = new Date();
+        past.setDate(today.getDate() - 30);
+        this.filterStartDate = formatLocalDateIso(past);
+        this.filterEndDate = formatLocalDateIso(today);
+      } else if (this.filterPeriod === "THIS_MONTH") {
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        this.filterStartDate = formatLocalDateIso(firstDay);
+        this.filterEndDate = formatLocalDateIso(today);
+      } else if (this.filterPeriod === "THIS_YEAR") {
+        const firstDay = new Date(today.getFullYear(), 0, 1);
+        this.filterStartDate = formatLocalDateIso(firstDay);
+        this.filterEndDate = formatLocalDateIso(today);
+      }
+      this.applyFilter();
+    },
+    onCustomDateChange() {
+      this.filterPeriod = "CUSTOM";
+      this.applyFilter();
+    },
+    applyFilter() {
+      if (!this.filterCountry) {
+        this.filterValidationWarning = true;
+        return;
+      }
+      this.filterValidationWarning = false;
+
+      const countryObj = CASCADING_LOCATIONS[this.filterCountry];
+      const countryName = countryObj ? countryObj.name : this.filterCountry;
+      let cityName = "전체 (Select All)";
+      if (countryObj && this.filterCity !== "ALL") {
+        const c = countryObj.cities.find(ci => ci.code === this.filterCity);
+        if (c) cityName = c.name;
+      }
+      let envName = "전체 (Select All)";
+      const foundEnv = this.envOptions.find(e => e.code === this.filterEnv);
+      if (foundEnv) envName = foundEnv.name;
+
+      this.filterSummaryText = `[${this.countryLabel}: ${countryName}] · [${this.cityLabel}: ${cityName}] · [${this.envLabel}: ${envName}] · [${this.periodLabel}: ${this.filterStartDate} ~ ${this.filterEndDate}]`;
+      this.$emit("filter-change", {
+        menuKey: this.menuKey,
+        country: this.filterCountry,
+        city: this.filterCity,
+        env: this.filterEnv,
+        startDate: this.filterStartDate,
+        endDate: this.filterEndDate
+      });
+    },
+    resetFilter() {
+      this.filterCountry = "KR";
+      this.filterCity = "ALL";
+      this.filterEnv = "ALL";
+      this.filterPeriod = "7DAYS";
+      this.initFilterDates();
+      this.applyFilter();
+    }
+  },
+  template: `
+    <div class="plane-sub-filter-bar">
+      <div class="plane-filter-header-line">
+        <span class="plane-sub-filter-badge">⚙️ {{ badge }}</span>
+        <span class="plane-sub-filter-desc">본 소메뉴 화면에 특화된 연계 콤보 및 기간 조회 조건입니다.</span>
+      </div>
+      <div class="plane-filter-row">
+        <!-- Cascading Combo 1: 국가 (Country) - Required Selection with * and Badge -->
+        <div class="plane-filter-group" :class="{ 'has-error': filterValidationWarning }">
+          <label class="plane-filter-label">
+            <span>{{ countryLabel }}</span>
+            <span class="plane-req-star">*</span>
+            <span class="plane-req-badge">필수</span>
+          </label>
+          <select class="plane-filter-select" v-model="filterCountry" @change="onCountryChange">
+            <option value="" disabled>-- 국가 선택 (필수) --</option>
+            <option value="KR">대한민국 (Korea)</option>
+            <option value="US">미국 (USA)</option>
+            <option value="JP">일본 (Japan)</option>
+            <option value="DE">독일 (Germany)</option>
+            <option value="UK">영국 (UK)</option>
+          </select>
+        </div>
+
+        <!-- Cascading Combo 2: 시/도 (City/State) - Linked with Country + Select All Option -->
+        <div class="plane-filter-group">
+          <label class="plane-filter-label">
+            <span>{{ cityLabel }}</span>
+            <span class="plane-all-badge">Select All 지원</span>
+          </label>
+          <select class="plane-filter-select" v-model="filterCity" @change="applyFilter">
+            <option v-for="c in cityOptions" :key="c.code" :value="c.code">
+              {{ c.name }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Combo 3: 환경 / 상태 - with Select All Option -->
+        <div class="plane-filter-group">
+          <label class="plane-filter-label">
+            <span>{{ envLabel }}</span>
+            <span class="plane-all-badge">Select All 지원</span>
+          </label>
+          <select class="plane-filter-select" v-model="filterEnv" @change="applyFilter">
+            <option v-for="e in envOptions" :key="e.code" :value="e.code">
+              {{ e.name }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Combo 4: 조회 기간 콤보 & 캘린더 날짜 선택 -->
+        <div class="plane-filter-group plane-filter-group-date">
+          <label class="plane-filter-label">
+            <span>{{ periodLabel }}</span>
+            <span style="font-size:11px; color:#2563eb; font-weight:normal;">📅 캘린더 연동</span>
+          </label>
+          <div class="plane-date-control-wrap">
+            <select class="plane-filter-select plane-period-select" v-model="filterPeriod" @change="onPeriodPresetChange">
+              <option value="TODAY">오늘 (Today)</option>
+              <option value="7DAYS">최근 7일 (Last 7 Days)</option>
+              <option value="30DAYS">최근 30일 (Last 30 Days)</option>
+              <option value="THIS_MONTH">이번 달 (This Month)</option>
+              <option value="THIS_YEAR">올해 (This Year)</option>
+              <option value="CUSTOM">직접 선택 (Calendar Custom)</option>
+            </select>
+            <div class="plane-date-inputs">
+              <input type="date" 
+                     class="plane-date-input" 
+                     v-model="filterStartDate" 
+                     @change="onCustomDateChange"
+                     title="시작일 선택">
+              <span class="plane-date-separator">~</span>
+              <input type="date" 
+                     class="plane-date-input" 
+                     v-model="filterEndDate" 
+                     @change="onCustomDateChange"
+                     title="종료일 선택">
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter Actions -->
+        <div class="plane-filter-actions">
+          <button class="plane-filter-search-btn" @click="applyFilter" title="조건으로 조회">
+            <svg style="width:14px; height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <span>조회</span>
+          </button>
+          <button class="plane-filter-reset-btn" @click="resetFilter" title="조건 초기화">
+            <svg style="width:14px; height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            <span>초기화</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Warning Msg -->
+      <div v-if="filterValidationWarning" class="plane-filter-warning-msg">
+        ⚠️ <strong>필수 선택 오류:</strong> [{{ countryLabel }}]은(는) 필수 선택 항목입니다. 국가를 선택한 후 조회해 주십시오.
+      </div>
+
+      <!-- Applied Filter Summary -->
+      <div v-if="filterSummaryText && !filterValidationWarning" class="plane-filter-summary-row">
+        <span class="plane-filter-applied-badge">적용 조건</span>
+        <span class="plane-filter-summary-text">{{ filterSummaryText }}</span>
+      </div>
+    </div>
+  `
+});
+
+// ========================================================
+// 5. Factory function for Modular Rail Views (c, i, f, o / C, I, F, O / favorites)
 // ========================================================
 function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
   return {
@@ -517,15 +846,8 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
         // Dedicated Favorites Direct Selection State
         selectedFavItem: null,
 
-        // Top Filter Bar State (Cascading Combos & Calendar Pickers)
-        filterCountry: "KR",
-        filterCity: "ALL",
-        filterEnv: "ALL",
-        filterPeriod: "7DAYS",
-        filterStartDate: "",
-        filterEndDate: "",
-        filterValidationWarning: false,
-        filterSummaryText: "",
+        // Filter Configs
+        filterConfigs: SUB_MENU_FILTER_CONFIGS,
 
         // AUIGrid Columns
         gridColumns: [
@@ -597,12 +919,6 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
           (f.moduleKey && f.moduleKey.toLowerCase().includes(kw))
         );
       },
-      cityOptions() {
-        if (!this.filterCountry || !CASCADING_LOCATIONS[this.filterCountry]) {
-          return [{ code: "ALL", name: "전체 (Select All)" }];
-        }
-        return CASCADING_LOCATIONS[this.filterCountry].cities;
-      },
       currentSubContent() {
         if (!this.selectedModel) return null;
         if (this.selectedModel.contents && this.selectedModel.contents.length > 0) {
@@ -615,63 +931,27 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
         if (type === "OVERVIEW") {
           return {
             title: `${m.name} 소개 및 개요`,
-            contentBody: `### ${m.name}: ${m.tagline || "핵심 서비스 및 기술 사양"}
-
-- **제공자 / 분류**: ${m.provider}
-- **출시 / 등록일**: ${m.releaseDate}
-- **주요 규격 / 스펙**: ${m.contextWindow}
-- **단가 및 요금 정책**: ${m.pricingInput}
-
-${m.name}은(는) 해당 분야에서 널리 활용되는 대표적인 서비스로, 고성능 처리 엔진과 안정적인 인프라를 바탕으로 최적의 작업 효율을 제공합니다.`
+            contentBody: `### ${m.name}: ${m.tagline || "핵심 서비스 및 기술 사양"}\n\n- **제공자 / 분류**: ${m.provider}\n- **출시 / 등록일**: ${m.releaseDate}\n- **주요 규격 / 스펙**: ${m.contextWindow}\n- **단가 및 요금 정책**: ${m.pricingInput}\n\n${m.name}은(는) 해당 분야에서 널리 활용되는 대표적인 서비스로, 고성능 처리 엔진과 안정적인 인프라를 바탕으로 최적의 작업 효율을 제공합니다.`
           };
         } else if (type === "USAGE") {
           return {
             title: `${m.name} 주요 특징 & 사용법`,
-            contentBody: `### ${m.name} 핵심 활용 가이드
-
-1. **환경 설정**: 공식 API 키 발급 또는 서비스 엔드포인트 등록
-2. **연동 규격**: REST API / SDK / 웹 콘솔을 통한 표준 호출
-3. **모니터링**: 실시간 모니터링 시스템과 지표 동기화
-
-\`\`\`bash
-# ${m.name} 표준 연동 프로토콜
-curl -X GET "https://api.example.com/${m.modelKey}/status" \
-     -H "Authorization: Bearer YOUR_TOKEN"
-\`\`\``
+            contentBody: `### ${m.name} 핵심 활용 가이드\n\n1. **환경 설정**: 공식 API 키 발급 또는 서비스 엔드포인트 등록\n2. **연동 규격**: REST API / SDK / 웹 콘솔을 통한 표준 호출\n3. **모니터링**: 실시간 모니터링 시스템과 지표 동기화\n\n\`\`\`bash\n# ${m.name} 표준 연동 프로토콜\ncurl -X GET "https://api.example.com/${m.modelKey}/status" \\\n     -H "Authorization: Bearer YOUR_TOKEN"\n\`\`\``
           };
         } else if (type === "PROS_CONS") {
           return {
             title: `${m.name} 장단점 비교 분석`,
-            contentBody: `### ${m.name} 장점 및 트레이드오프
-
-#### ✅ 핵심 강점
-- **뛰어난 안정성**: 높은 SLA 가용성 및 글로벌 CDN/클러스터 분산 지원
-- **풍부한 기능**: 엔터프라이즈 업무 워크플로우에 최적화된 편의성
-- **비용 최적화**: 경쟁력 있는 단가 및 사용량 기반 탄력적 요금제 (${m.pricingInput})
-
-#### ⚠️ 유의사항 및 한계
-- 대규모 동시 요청 시 트래픽 스로틀링(Rate Limiting) 정책 준수 필요
-- 사내 망 연동 시 프록시 및 방화벽 인바운드/아웃바운드 포트 확인 필요`
+            contentBody: `### ${m.name} 장점 및 트레이드오프\n\n#### ✅ 핵심 강점\n- **뛰어난 안정성**: 높은 SLA 가용성 및 글로벌 CDN/클러스터 분산 지원\n- **풍부한 기능**: 엔터프라이즈 업무 워크플로우에 최적화된 편의성\n- **비용 최적화**: 경쟁력 있는 단가 및 사용량 기반 탄력적 요금제 (${m.pricingInput})\n\n#### ⚠️ 유의사항 및 한계\n- 대규모 동시 요청 시 트래픽 스로틀링(Rate Limiting) 정책 준수 필요\n- 사내 망 연동 시 프록시 및 방화벽 인바운드/아웃바운드 포트 확인 필요`
           };
         } else if (type === "BENCHMARKS") {
           return {
             title: `${m.name} 벤치마크 및 성능 지표`,
-            contentBody: `### ${m.name} 성능 데이터
-
-- 스펙 사양: **${m.contextWindow}**
-- 출력 및 응답 용량: **${m.maxOutput}**
-- 상태 배지: **${m.badge}**
-
-*상세 비교 데이터는 '성능 분석 시트' 탭에서 확인하실 수 있습니다.*`
+            contentBody: `### ${m.name} 성능 데이터\n\n- 스펙 사양: **${m.contextWindow}**\n- 출력 및 응답 용량: **${m.maxOutput}**\n- 상태 배지: **${m.badge}**\n\n*상세 비교 데이터는 '성능 분석 시트' 탭에서 확인하실 수 있습니다.*`
           };
         } else if (type === "LINKS") {
           return {
             title: `${m.name} 공식 연결 링크`,
-            contentBody: `### ${m.name} 공식 리소스
-
-- 🌐 [공식 홈페이지 및 포털](https://www.google.com/search?q=${encodeURIComponent(m.name)})
-- 📖 [개발자 및 사용자 기술 문서](https://www.google.com/search?q=${encodeURIComponent(m.name + " docs")})
-- 💬 [커뮤니티 및 지원 센터](https://www.google.com/search?q=${encodeURIComponent(m.name + " community")})`
+            contentBody: `### ${m.name} 공식 리소스\n\n- 🌐 [공식 홈페이지 및 포털](https://www.google.com/search?q=${encodeURIComponent(m.name)})\n- 📖 [개발자 및 사용자 기술 문서](https://www.google.com/search?q=${encodeURIComponent(m.name + " docs")})\n- 💬 [커뮤니티 및 지원 센터](https://www.google.com/search?q=${encodeURIComponent(m.name + " community")})`
           };
         }
         return null;
@@ -685,81 +965,6 @@ curl -X GET "https://api.example.com/${m.modelKey}/status" \
       this.initData();
     },
     methods: {
-      initFilterDates() {
-        const today = new Date();
-        const past = new Date();
-        past.setDate(today.getDate() - 7);
-        this.filterStartDate = formatLocalDateIso(past);
-        this.filterEndDate = formatLocalDateIso(today);
-      },
-      onCountryChange() {
-        this.filterValidationWarning = false;
-        this.filterCity = "ALL";
-        this.applyFilter();
-      },
-      onPeriodPresetChange() {
-        const today = new Date();
-        if (this.filterPeriod === "TODAY") {
-          this.filterStartDate = formatLocalDateIso(today);
-          this.filterEndDate = formatLocalDateIso(today);
-        } else if (this.filterPeriod === "7DAYS") {
-          const past = new Date();
-          past.setDate(today.getDate() - 7);
-          this.filterStartDate = formatLocalDateIso(past);
-          this.filterEndDate = formatLocalDateIso(today);
-        } else if (this.filterPeriod === "30DAYS") {
-          const past = new Date();
-          past.setDate(today.getDate() - 30);
-          this.filterStartDate = formatLocalDateIso(past);
-          this.filterEndDate = formatLocalDateIso(today);
-        } else if (this.filterPeriod === "THIS_MONTH") {
-          const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-          this.filterStartDate = formatLocalDateIso(firstDay);
-          this.filterEndDate = formatLocalDateIso(today);
-        } else if (this.filterPeriod === "THIS_YEAR") {
-          const firstDay = new Date(today.getFullYear(), 0, 1);
-          this.filterStartDate = formatLocalDateIso(firstDay);
-          this.filterEndDate = formatLocalDateIso(today);
-        }
-        this.applyFilter();
-      },
-      onCustomDateChange() {
-        this.filterPeriod = "CUSTOM";
-        this.applyFilter();
-      },
-      applyFilter() {
-        if (!this.filterCountry) {
-          this.filterValidationWarning = true;
-          return;
-        }
-        this.filterValidationWarning = false;
-
-        const countryObj = CASCADING_LOCATIONS[this.filterCountry];
-        const countryName = countryObj ? countryObj.name : this.filterCountry;
-        let cityName = "전체 (Select All)";
-        if (countryObj && this.filterCity !== "ALL") {
-          const c = countryObj.cities.find(ci => ci.code === this.filterCity);
-          if (c) cityName = c.name;
-        }
-        const envMap = {
-          ALL: "전체 (Select All)",
-          PROD: "운영 (Production)",
-          STAGE: "검증 (Staging)",
-          DEV: "개발 (Development)",
-          MAINT: "점검 중 (Maintenance)"
-        };
-        const envName = envMap[this.filterEnv] || this.filterEnv;
-
-        this.filterSummaryText = `[국가: ${countryName}] · [시/도: ${cityName}] · [환경: ${envName}] · [기간: ${this.filterStartDate} ~ ${this.filterEndDate}]`;
-      },
-      resetFilter() {
-        this.filterCountry = "KR";
-        this.filterCity = "ALL";
-        this.filterEnv = "ALL";
-        this.filterPeriod = "7DAYS";
-        this.initFilterDates();
-        this.applyFilter();
-      },
       async selectDirectFavorite(fav) {
         if (!fav) return;
         this.selectedFavItem = fav;
@@ -785,8 +990,6 @@ curl -X GET "https://api.example.com/${m.modelKey}/status" \
         }
       },
       async initData() {
-        this.initFilterDates();
-        this.applyFilter();
         try {
           if (this.moduleKey === "favorites") {
             if (this.favoriteList.length > 0) {
@@ -1057,159 +1260,7 @@ curl -X GET "https://api.example.com/${m.modelKey}/status" \
           </header>
 
           <div class="plane-content-body">
-            <!-- 1. Top Filter & Cascading Combo Control Bar (화면마다 상단 콤보 & 캘린더) -->
-            <div class="plane-filter-bar">
-              <div class="plane-filter-row">
-                <!-- Cascading Combo 1: 국가 (Country) - Required Selection with * and Badge -->
-                <div class="plane-filter-group" :class="{ 'has-error': filterValidationWarning }">
-                  <label class="plane-filter-label">
-                    <span>국가 (Country)</span>
-                    <span class="plane-req-star">*</span>
-                    <span class="plane-req-badge">필수</span>
-                  </label>
-                  <select class="plane-filter-select" v-model="filterCountry" @change="onCountryChange">
-                    <option value="" disabled>-- 국가 선택 (필수) --</option>
-                    <option value="KR">대한민국 (Korea)</option>
-                    <option value="US">미국 (USA)</option>
-                    <option value="JP">일본 (Japan)</option>
-                    <option value="DE">독일 (Germany)</option>
-                    <option value="UK">영국 (UK)</option>
-                  </select>
-                </div>
-
-                <!-- Cascading Combo 2: 시/도 (City/State) - Linked with Country + Select All Option -->
-                <div class="plane-filter-group">
-                  <label class="plane-filter-label">
-                    <span>시/도 (City/State)</span>
-                    <span class="plane-all-badge">Select All 지원</span>
-                  </label>
-                  <select class="plane-filter-select" v-model="filterCity" @change="applyFilter">
-                    <option v-for="c in cityOptions" :key="c.code" :value="c.code">
-                      {{ c.name }}
-                    </option>
-                  </select>
-                </div>
-
-                <!-- Combo 3: 운영 환경 / 상태 (Environment) - with Select All Option -->
-                <div class="plane-filter-group">
-                  <label class="plane-filter-label">
-                    <span>운영 환경 / 상태</span>
-                    <span class="plane-all-badge">Select All 지원</span>
-                  </label>
-                  <select class="plane-filter-select" v-model="filterEnv" @change="applyFilter">
-                    <option value="ALL">전체 (Select All)</option>
-                    <option value="PROD">운영 (Production)</option>
-                    <option value="STAGE">검증 (Staging)</option>
-                    <option value="DEV">개발 (Development)</option>
-                    <option value="MAINT">점검 중 (Maintenance)</option>
-                  </select>
-                </div>
-
-                <!-- Combo 4: 조회 기간 콤보 & 캘린더 날짜 선택 (Calendar Date Pickers) -->
-                <div class="plane-filter-group plane-filter-group-date">
-                  <label class="plane-filter-label">
-                    <span>조회 기간 (Calendar)</span>
-                    <span style="font-size:11px; color:#2563eb; font-weight:normal;">📅 캘린더 연동</span>
-                  </label>
-                  <div class="plane-date-control-wrap">
-                    <!-- Preset Combo -->
-                    <select class="plane-filter-select plane-period-select" v-model="filterPeriod" @change="onPeriodPresetChange">
-                      <option value="TODAY">오늘 (Today)</option>
-                      <option value="7DAYS">최근 7일 (Last 7 Days)</option>
-                      <option value="30DAYS">최근 30일 (Last 30 Days)</option>
-                      <option value="THIS_MONTH">이번 달 (This Month)</option>
-                      <option value="THIS_YEAR">올해 (This Year)</option>
-                      <option value="CUSTOM">직접 선택 (Calendar Custom)</option>
-                    </select>
-                    
-                    <!-- Calendar Date Pickers -->
-                    <div class="plane-date-inputs">
-                      <input type="date" 
-                             class="plane-date-input" 
-                             v-model="filterStartDate" 
-                             @change="onCustomDateChange"
-                             title="시작일 선택">
-                      <span class="plane-date-separator">~</span>
-                      <input type="date" 
-                             class="plane-date-input" 
-                             v-model="filterEndDate" 
-                             @change="onCustomDateChange"
-                             title="종료일 선택">
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Filter Actions: Search & Reset Buttons -->
-                <div class="plane-filter-actions">
-                  <button class="plane-filter-search-btn" @click="applyFilter" title="조건으로 조회">
-                    <svg style="width:14px; height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                    <span>조회</span>
-                  </button>
-                  <button class="plane-filter-reset-btn" @click="resetFilter" title="조건 초기화">
-                    <svg style="width:14px; height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                    </svg>
-                    <span>초기화</span>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Validation Warning Alert -->
-              <div v-if="filterValidationWarning" class="plane-filter-warning-msg">
-                ⚠️ <strong>필수 선택 오류:</strong> [국가]는 필수 선택 항목입니다. 국가를 선택한 후 조회해 주십시오.
-              </div>
-
-              <!-- Applied Filter Summary Status Bar -->
-              <div v-if="filterSummaryText && !filterValidationWarning" class="plane-filter-summary-row">
-                <span class="plane-filter-applied-badge">적용된 조회 조건</span>
-                <span class="plane-filter-summary-text">{{ filterSummaryText }}</span>
-              </div>
-            </div>
-
-            <!-- 2. Sub-menu Tabs / Favorites Single-View Bar -->
-            <!-- In Favorites Mode: Single-Menu Indicator (NO Tree sibling tabs!) -->
-            <div class="plane-fav-single-tab-bar" v-if="moduleKey === 'favorites' && selectedFavItem">
-              <span class="plane-fav-active-badge">⭐ 즐겨찾기 단독 화면</span>
-              <span class="plane-fav-active-label">{{ selectedFavItem.name }} &gt; {{ selectedFavItem.subTabTitle }}</span>
-            </div>
-
-            <!-- In Normal Mode: Multi-tab navigation (소개 및 개요, 주요 특징, 성능 분석 시트, 운영 가이드, 장단점, 공식 링크) -->
-            <div class="plane-model-nav" v-else-if="selectedModel">
-              <button class="plane-model-nav-btn" 
-                      :class="{ active: activeSubTab === 'OVERVIEW' }" 
-                      @click="activeSubTab = 'OVERVIEW'">
-                📌 소개 및 개요
-              </button>
-              <button class="plane-model-nav-btn" 
-                      :class="{ active: activeSubTab === 'USAGE' }" 
-                      @click="activeSubTab = 'USAGE'">
-                💡 주요 특징 &amp; 사용법
-              </button>
-              <button class="plane-model-nav-btn" 
-                      :class="{ active: activeSubTab === 'BENCHMARKS' }" 
-                      @click="activeSubTab = 'BENCHMARKS'">
-                📊 성능 분석 시트 (AUIGrid)
-              </button>
-              <button class="plane-model-nav-btn" 
-                      :class="{ active: activeSubTab === 'CROSS_EDITOR' }" 
-                      @click="activeSubTab = 'CROSS_EDITOR'">
-                📝 운영 가이드 (CrossEditor)
-              </button>
-              <button class="plane-model-nav-btn" 
-                      :class="{ active: activeSubTab === 'PROS_CONS' }" 
-                      @click="activeSubTab = 'PROS_CONS'">
-                ⚖️ 장단점 비교
-              </button>
-              <button class="plane-model-nav-btn" 
-                      :class="{ active: activeSubTab === 'LINKS' }" 
-                      @click="activeSubTab = 'LINKS'">
-                🔗 공식 링크
-              </button>
-            </div>
-
-            <!-- 3. Screen Content Section -->
+            <!-- Screen Content Section (Dedicated to Selected Sub-menu - NO Duplicate Horizontal Tabs) -->
             <section v-if="selectedModel">
               <!-- Sub-menu 1: AUIGrid Component View -->
               <div v-if="activeSubTab === 'BENCHMARKS'" class="plane-card">
@@ -1229,6 +1280,10 @@ curl -X GET "https://api.example.com/${m.modelKey}/status" \
                     </p>
                   </div>
                 </div>
+
+                <!-- Sub-menu Dedicated Combo Filter Bar -->
+                <menu-filter-bar menu-key="BENCHMARKS" :config="filterConfigs.BENCHMARKS" />
+
                 <aui-grid :title="selectedModel.name + ' 성능 분석 시트'" :columns="gridColumns" :rows="allModels.length ? allModels : [selectedModel]" />
               </div>
 
@@ -1250,6 +1305,10 @@ curl -X GET "https://api.example.com/${m.modelKey}/status" \
                     </p>
                   </div>
                 </div>
+
+                <!-- Sub-menu Dedicated Combo Filter Bar -->
+                <menu-filter-bar menu-key="CROSS_EDITOR" :config="filterConfigs.CROSS_EDITOR" />
+
                 <cross-editor v-model="crossEditorHtml" :title="selectedModel.name + ' 표준 운영 가이드'" />
               </div>
 
@@ -1268,6 +1327,10 @@ curl -X GET "https://api.example.com/${m.modelKey}/status" \
                     📌 {{ currentSubContent ? currentSubContent.title : (selectedModel.name + ' 소개 및 개요') }}
                   </h2>
                 </div>
+
+                <!-- Sub-menu Dedicated Combo Filter Bar -->
+                <menu-filter-bar menu-key="OVERVIEW" :config="filterConfigs.OVERVIEW" />
+
                 <div class="markdown-body" v-html="renderedMarkdown"></div>
               </div>
 
@@ -1286,6 +1349,10 @@ curl -X GET "https://api.example.com/${m.modelKey}/status" \
                     💡 {{ currentSubContent ? currentSubContent.title : (selectedModel.name + ' 주요 특징 & 사용법') }}
                   </h2>
                 </div>
+
+                <!-- Sub-menu Dedicated Combo Filter Bar -->
+                <menu-filter-bar menu-key="USAGE" :config="filterConfigs.USAGE" />
+
                 <div class="markdown-body" v-html="renderedMarkdown"></div>
               </div>
 
@@ -1304,6 +1371,10 @@ curl -X GET "https://api.example.com/${m.modelKey}/status" \
                     ⚖️ {{ currentSubContent ? currentSubContent.title : (selectedModel.name + ' 장단점 비교') }}
                   </h2>
                 </div>
+
+                <!-- Sub-menu Dedicated Combo Filter Bar -->
+                <menu-filter-bar menu-key="PROS_CONS" :config="filterConfigs.PROS_CONS" />
+
                 <div class="markdown-body" v-html="renderedMarkdown"></div>
                 <div class="plane-pros-cons-grid" style="margin-top:18px;">
                   <div class="plane-pros-card">
@@ -1332,6 +1403,10 @@ curl -X GET "https://api.example.com/${m.modelKey}/status" \
                     🔗 {{ currentSubContent ? currentSubContent.title : (selectedModel.name + ' 공식 링크') }}
                   </h2>
                 </div>
+
+                <!-- Sub-menu Dedicated Combo Filter Bar -->
+                <menu-filter-bar menu-key="LINKS" :config="filterConfigs.LINKS" />
+
                 <div class="markdown-body" v-html="renderedMarkdown"></div>
               </div>
 
@@ -1364,6 +1439,7 @@ curl -X GET "https://api.example.com/${m.modelKey}/status" \
     `
   };
 }
+
 
 // ========================================================
 // 4. Register Distinct Components for c, i, f, o / C, I, F, O / Favorites
