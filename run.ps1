@@ -11,52 +11,81 @@ Write-Host "  Vue2 + Spring Boot 2.7 + MyBatis XML + Embedded H2" -ForegroundCol
 Write-Host "==================================================================" -ForegroundColor Cyan
 Write-Host ""
 
-# Check Java in PATH
-$javaCmd = Get-Command java -ErrorAction SilentlyContinue
+# ------------------------------------------------------------------
+# Step 1: Detect and validate JAVA_HOME
+# ------------------------------------------------------------------
+$validJavaHome = $null
 
-# Check JAVA_HOME if not in PATH
-if (-not $javaCmd) {
-    if ($env:JAVA_HOME -and (Test-Path "$env:JAVA_HOME\bin\java.exe")) {
-        $env:PATH = "$env:JAVA_HOME\bin;" + $env:PATH
-        $javaCmd = Get-Command java -ErrorAction SilentlyContinue
+if ($env:JAVA_HOME) {
+    $cleanPath = $env:JAVA_HOME.Trim('"').Trim().TrimEnd('\')
+    if ($cleanPath.EndsWith('\bin', [System.StringComparison]::OrdinalIgnoreCase)) {
+        $cleanPath = Split-Path $cleanPath
+    }
+    if (Test-Path "$cleanPath\bin\java.exe") {
+        $validJavaHome = $cleanPath
     }
 }
 
-# Check common JDK directories
-if (-not $javaCmd) {
-    $searchPaths = @(
-        "C:\Program Files\Eclipse Adoptium\jdk-17*\bin\java.exe",
-        "C:\Program Files\Java\jdk-17*\bin\java.exe",
-        "C:\Program Files\Java\jdk-21*\bin\java.exe",
-        "C:\Program Files\Amazon Corretto\jdk17*\bin\java.exe",
-        "C:\Program Files\Zulu\zulu-17*\bin\java.exe",
-        "C:\Program Files\Microsoft\jdk-17*\bin\java.exe"
-    )
-    foreach ($p in $searchPaths) {
-        $found = Get-Item $p -ErrorAction SilentlyContinue | Select-Object -First 1
-        if ($found) {
-            $binDir = Split-Path $found.FullName
-            $env:PATH = "$binDir;" + $env:PATH
-            $javaCmd = Get-Command java -ErrorAction SilentlyContinue
-            break
+if (-not $validJavaHome) {
+    # Try deriving from 'where java'
+    $javaCmd = Get-Command java -ErrorAction SilentlyContinue
+    if ($javaCmd -and $javaCmd.Source) {
+        $binDir = Split-Path $javaCmd.Source
+        if ((Split-Path $binDir -Leaf) -eq "bin") {
+            $parentDir = Split-Path $binDir
+            if (Test-Path "$parentDir\bin\java.exe") {
+                $validJavaHome = $parentDir
+            }
         }
     }
 }
 
-if (-not $javaCmd) {
-    Write-Host "[ERROR] Java 17+ is required but 'java' was not found in PATH." -ForegroundColor Red
-    Write-Host "Please install OpenJDK 17 (e.g., Eclipse Temurin 17) and try again." -ForegroundColor Yellow
-    Write-Host "Download: https://adoptium.net/temurin/releases/?version=17" -ForegroundColor Yellow
+if (-not $validJavaHome) {
+    # Search common JDK directories
+    $searchPatterns = @(
+        "C:\Program Files\Eclipse Adoptium\jdk-*",
+        "C:\Program Files\Java\jdk-*",
+        "C:\Program Files\Amazon Corretto\jdk*",
+        "C:\Program Files\Zulu\zulu-*",
+        "C:\Program Files\Microsoft\jdk-*",
+        "$env:USERPROFILE\.jdks\*",
+        "C:\Program Files\BellSoft\LibericaJDK-*"
+    )
+    foreach ($pat in $searchPatterns) {
+        $dirs = Get-Item $pat -ErrorAction SilentlyContinue
+        if ($dirs) {
+            foreach ($d in $dirs) {
+                if (Test-Path "$($d.FullName)\bin\java.exe") {
+                    $validJavaHome = $d.FullName
+                    break
+                }
+            }
+        }
+        if ($validJavaHome) { break }
+    }
+}
+
+if (-not $validJavaHome) {
+    Write-Host "[ERROR] Could not find a valid Java 17+ installation or JAVA_HOME." -ForegroundColor Red
+    Write-Host "Maven requires the JAVA_HOME environment variable to be set." -ForegroundColor Yellow
+    Write-Host "Please install OpenJDK 17/20/21 from: https://adoptium.net/temurin/releases/" -ForegroundColor Yellow
     Write-Host ""
     Read-Host "Press Enter to exit"
     exit 1
 }
 
-$javaVer = & java -version 2>&1 | Select-Object -First 1
+# Export JAVA_HOME and ensure bin is in PATH
+$env:JAVA_HOME = $validJavaHome
+$env:PATH = "$validJavaHome\bin;" + $env:PATH
+
+Write-Host "[INFO] JAVA_HOME set to: $env:JAVA_HOME" -ForegroundColor Green
+$javaVer = & "$validJavaHome\bin\java.exe" -version 2>&1 | Select-Object -First 1
 Write-Host "[INFO] Detected Java: $javaVer" -ForegroundColor Green
 Write-Host ""
 
-# Prefer system Maven if available
+# ------------------------------------------------------------------
+# Step 2: Choose Maven runner
+# ------------------------------------------------------------------
 $mvnCmd = Get-Command mvn -ErrorAction SilentlyContinue
 if ($mvnCmd) {
     Write-Host "[INFO] Using installed Maven: mvn" -ForegroundColor Gray

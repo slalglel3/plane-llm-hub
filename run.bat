@@ -12,54 +12,84 @@ echo   Vue2 + Spring Boot 2.7 + MyBatis XML + Embedded H2
 echo ==================================================================
 echo.
 
-rem 1. Check if java is in PATH
-where java >nul 2>&1
-if %ERRORLEVEL% EQU 0 goto :JAVA_FOUND
+rem ------------------------------------------------------------------
+rem Step 1: Detect and validate JAVA_HOME
+rem ------------------------------------------------------------------
 
-rem 2. Check if JAVA_HOME contains java.exe
+rem Clean up any quotes or trailing backslashes from existing JAVA_HOME
 if defined JAVA_HOME (
-    if exist "%JAVA_HOME%\bin\java.exe" (
-        set "PATH=%JAVA_HOME%\bin;%PATH%"
-        goto :JAVA_FOUND
-    )
+    set "JAVA_HOME=%JAVA_HOME:"=%"
+    if "!JAVA_HOME:~-1!"=="\" set "JAVA_HOME=!JAVA_HOME:~0,-1!"
+    if "!JAVA_HOME:~-4!"=="\bin" set "JAVA_HOME=!JAVA_HOME:~0,-4!"
+    if exist "!JAVA_HOME!\bin\java.exe" goto :JAVA_HOME_SET
+    rem If existing JAVA_HOME was invalid, unset it so auto-detection can find the real one
+    set "JAVA_HOME="
 )
 
-rem 3. Search common JDK 17+ installation directories on Windows
-for %%D in (
-    "C:\Program Files\Eclipse Adoptium\jdk-17*"
-    "C:\Program Files\Java\jdk-17*"
-    "C:\Program Files\Java\jdk-21*"
-    "C:\Program Files\Amazon Corretto\jdk17*"
-    "C:\Program Files\Zulu\zulu-17*"
-    "C:\Program Files\Microsoft\jdk-17*"
-) do (
-    for /d %%P in (%%D) do (
-        if exist "%%P\bin\java.exe" (
-            set "JAVA_HOME=%%P"
-            set "PATH=%%P\bin;!PATH!"
-            goto :JAVA_FOUND
+rem Try to derive JAVA_HOME from where java
+for /f "delims=" %%F in ('where java 2^>nul') do (
+    if not defined JAVA_HOME (
+        set "J_BIN=%%~dpF"
+        if "!J_BIN:~-1!"=="\" set "J_BIN=!J_BIN:~0,-1!"
+        for %%P in ("!J_BIN!") do (
+            if /i "%%~nxP"=="bin" (
+                set "CANDIDATE=%%~dpP"
+                if "!CANDIDATE:~-1!"=="\" set "CANDIDATE=!CANDIDATE:~0,-1!"
+                if exist "!CANDIDATE!\bin\java.exe" (
+                    set "JAVA_HOME=!CANDIDATE!"
+                )
+            )
         )
     )
 )
 
-rem If Java is still not found, display clear setup guide
-echo [ERROR] Java 17 or higher was not detected on this system.
+if defined JAVA_HOME if exist "!JAVA_HOME!\bin\java.exe" goto :JAVA_HOME_SET
+
+rem Search common JDK directories
+for %%D in (
+    "C:\Program Files\Eclipse Adoptium\jdk-*"
+    "C:\Program Files\Java\jdk-*"
+    "C:\Program Files\Amazon Corretto\jdk*"
+    "C:\Program Files\Zulu\zulu-*"
+    "C:\Program Files\Microsoft\jdk-*"
+    "C:\Users\%USERNAME%\.jdks\*"
+    "C:\Program Files\BellSoft\LibericaJDK-*"
+) do (
+    for /d %%P in (%%D) do (
+        if not defined JAVA_HOME (
+            if exist "%%P\bin\java.exe" (
+                set "JAVA_HOME=%%P"
+            )
+        )
+    )
+)
+
+if defined JAVA_HOME if exist "!JAVA_HOME!\bin\java.exe" goto :JAVA_HOME_SET
+
+rem If still not found:
+echo [ERROR] Could not find a valid Java 17+ installation or JAVA_HOME.
 echo.
-echo Please follow these steps to set up Java:
-echo   1. Download Eclipse Temurin JDK 17:
-echo      https://adoptium.net/temurin/releases/?version=17
-echo   2. Run the installer and check 'Add to PATH' and 'Set JAVA_HOME'.
-echo   3. Re-run run.bat.
+echo Maven requires the JAVA_HOME environment variable to be set.
+echo Please follow these steps:
+echo   1. Download and install Eclipse Temurin JDK 17 (or JDK 20/21):
+echo      https://adoptium.net/temurin/releases/
+echo   2. During installation, ensure 'Set JAVA_HOME' and 'Add to PATH' are checked.
+echo   3. Re-open terminal and run run.bat again.
 echo.
 pause
 exit /b 1
 
-:JAVA_FOUND
-echo [INFO] Java detected successfully.
-java -version
+:JAVA_HOME_SET
+rem Ensure PATH includes JAVA_HOME\bin
+set "PATH=%JAVA_HOME%\bin;%PATH%"
+
+echo [INFO] JAVA_HOME is set to: %JAVA_HOME%
+"%JAVA_HOME%\bin\java.exe" -version
 echo.
 
-rem Prefer system Maven if available, otherwise use Maven Wrapper
+rem ------------------------------------------------------------------
+rem Step 2: Choose Maven runner
+rem ------------------------------------------------------------------
 set "MVN_CMD=mvnw.cmd"
 where mvn >nul 2>&1
 if %ERRORLEVEL% EQU 0 (
