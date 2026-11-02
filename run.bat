@@ -87,6 +87,18 @@ echo [INFO] JAVA_HOME is set to: %JAVA_HOME%
 "%JAVA_HOME%\bin\java.exe" -version
 echo.
 
+rem Check if pre-built standalone JAR exists in project folder
+if exist "plane-llm-hub-1.0.0.jar" (
+    echo [INFO] 사전 빌드된 단일 Fat JAR (plane-llm-hub-1.0.0.jar) 감지됨.
+    echo [INFO] Maven/Nexus 다운로드 과정 없이 Java 단독으로 즉시 기동합니다...
+    echo [INFO] 서버 기동 완료 후 브라우저 접속: http://localhost:8080/
+    echo ------------------------------------------------------------------
+    echo.
+    "%JAVA_HOME%\bin\java.exe" -jar plane-llm-hub-1.0.0.jar
+    if !ERRORLEVEL! NEQ 0 pause
+    exit /b !ERRORLEVEL!
+)
+
 rem ------------------------------------------------------------------
 rem Step 2: Choose Maven runner
 rem ------------------------------------------------------------------
@@ -111,6 +123,13 @@ if %ERRORLEVEL% NEQ 0 (
     echo ==================================================================
     echo [ERROR] Application terminated with error code %ERRORLEVEL%.
     echo ==================================================================
+    echo.
+    echo [사내 폐쇄망 / Nexus 환경 문제 해결 가이드]
+    echo  1. 사내 Nexus 주소 및 모듈 버전을 확인/설정하려면:
+    echo     'nexus-setup.bat' 을 실행하세요.
+    echo  2. Nexus 빌드 과정 없이 즉시 실행하려면:
+    echo     GitHub Releases에서 'plane-llm-hub-1.0.0.jar'를 다운로드하여
+    echo     본 폴더에 넣고 run.bat을 실행하시면 Nexus 없이 즉시 구동됩니다.
     echo.
     pause
 )

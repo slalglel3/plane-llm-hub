@@ -83,6 +83,18 @@ $javaVer = & "$validJavaHome\bin\java.exe" -version 2>&1 | Select-Object -First 
 Write-Host "[INFO] Detected Java: $javaVer" -ForegroundColor Green
 Write-Host ""
 
+# Check if pre-built standalone JAR exists
+$jarPath = Join-Path $PSScriptRoot "plane-llm-hub-1.0.0.jar"
+if (Test-Path $jarPath) {
+    Write-Host "[INFO] 사전 빌드된 단일 Fat JAR (plane-llm-hub-1.0.0.jar) 감지됨." -ForegroundColor Green
+    Write-Host "[INFO] Maven/Nexus 다운로드 없이 Java 단독으로 즉시 기동합니다..." -ForegroundColor Cyan
+    Write-Host "[INFO] 서버 기동 완료 후 브라우저 접속: http://localhost:8080/" -ForegroundColor Green
+    Write-Host "------------------------------------------------------------------" -ForegroundColor Cyan
+    Write-Host ""
+    & "$validJavaHome\bin\java.exe" -jar $jarPath
+    exit $LASTEXITCODE
+}
+
 # ------------------------------------------------------------------
 # Step 2: Choose Maven runner
 # ------------------------------------------------------------------
@@ -100,4 +112,17 @@ Write-Host "[INFO] Once started, access: http://localhost:8080/" -ForegroundColo
 Write-Host "------------------------------------------------------------------" -ForegroundColor Cyan
 Write-Host ""
 
-& $execCmd spring-boot:run
+try {
+    & $execCmd spring-boot:run
+} catch {
+    Write-Host ""
+    Write-Host "==================================================================" -ForegroundColor Red
+    Write-Host "[사내 폐쇄망 / Nexus 환경 문제 해결 가이드]" -ForegroundColor Yellow
+    Write-Host " 1. 사내 Nexus 주소 및 모듈 버전을 확인/설정하려면:" -ForegroundColor Yellow
+    Write-Host "    .\nexus-setup.ps1 (또는 nexus-setup.bat)을 실행하세요." -ForegroundColor White
+    Write-Host " 2. Nexus 빌드 과정 없이 즉시 실행하려면:" -ForegroundColor Yellow
+    Write-Host "    GitHub Releases에서 'plane-llm-hub-1.0.0.jar'를 다운로드하여" -ForegroundColor White
+    Write-Host "    본 폴더에 넣고 .\run.ps1을 실행하시면 Nexus 없이 즉시 구동됩니다." -ForegroundColor White
+    Write-Host "==================================================================" -ForegroundColor Red
+    Read-Host "엔터를 누르면 종료합니다..."
+}

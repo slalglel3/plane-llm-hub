@@ -60,6 +60,8 @@ plane-llm-hub/
 ├── run.sh                                # Linux / macOS 원클릭 실행 스크립트
 ├── run.bat                               # Windows CMD 원클릭 실행 스크립트
 ├── run.ps1                               # Windows PowerShell 실행 스크립트
+├── nexus-setup.bat                       # 사내 Nexus 모듈 검사 및 pom.xml 자동 설정기
+├── nexus-setup.ps1                       # Nexus 검사 PowerShell 엔진
 ├── pom.xml                               # Spring Boot 및 MyBatis 의존성 정의
 ├── README.md
 ├── src/
@@ -168,6 +170,27 @@ npm install
 npm run dev
 ```
 - 프론트엔드 개발 URL: `http://localhost:3000` (백엔드 8080 포트와 자동 프록시 연동)
+
+---
+
+### 🏢 사내 폐쇄망 및 Nexus 환경 실행 가이드
+
+사내 개발망에서 외부 인터넷(Maven Central) 접근이 차단되어 있고 사내 Nexus 프록시만 허용된 경우, 아래 2가지 방법 중 하나를 선택하여 손쉽게 실행할 수 있습니다.
+
+#### 방법 A. 사내 Nexus 설정 도구 실행 (`nexus-setup.bat`)
+1. 탐색기에서 **`nexus-setup.bat`**을 더블클릭합니다.
+2. 콘솔 프롬프트에 사내 Nexus 전체 주소를 입력합니다 (예: `http://nexus.company.com:8081/repository/maven-public`).
+3. 스크립트가 Nexus REST API를 조회하여 사내 Nexus에 캐시된 **Spring Boot** 및 **MyBatis** 버전을 자동으로 검사하고 추천합니다.
+4. `pom.xml`에 사내 Nexus 저장소 URL 및 호환 버전이 자동으로 반영되며 즉시 빌드가 진행됩니다.
+
+#### 방법 B. 사전 빌드된 단일 Fat JAR 다운로드 실행 (가장 추천)
+사내 Nexus에 Spring Boot 모듈이 없더라도, 이미 모든 라이브러리와 Vue 프론트엔드가 포함된 **단일 실행 JAR**를 사용하면 Nexus 없이 Java만으로 즉시 구동됩니다:
+1. GitHub Releases 페이지에서 **`plane-llm-hub-1.0.0.jar`**를 다운로드합니다.
+2. 프로젝트 루트 폴더에 해당 `.jar` 파일을 넣고 **`run.bat`**을 실행합니다.
+3. `run.bat`이 사전 빌드된 JAR를 감지하여 Maven 다운로드 없이 1초 만에 서버를 즉시 기동합니다.
+   ```cmd
+   java -jar plane-llm-hub-1.0.0.jar
+   ```
 
 ---
 
