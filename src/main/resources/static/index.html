@@ -9,7 +9,7 @@
   <meta http-equiv="Expires" content="0">
   <title>Plane System Hub</title>
   <!-- Plane Web + AUIGrid + CrossEditor Stylesheet -->
-  <link rel="stylesheet" href="/css/plane.css?v=2">
+  <link rel="stylesheet" href="/css/plane.css?v=3">
   <link rel="stylesheet" href="/css/vendor/github-dark.min.css?v=2">
   <!-- Offline Vendor Scripts (100% Zero-External-Network / Corporate Closed Network Ready) -->
   <script src="/js/vendor/vue.min.js?v=2"></script>
@@ -17,56 +17,6 @@
   <script src="/js/vendor/highlight.min.js?v=2"></script>
 </head>
 <body>
-<!-- IE Mode Detection and Fallback Banner (Zero CSS-dependency, IE-compatible inline styles) -->
-<div id="ie-warning-banner" style="display:none; position:relative; background-color:#b91c1c; color:#ffffff; padding:16px 20px; font-family:'Malgun Gothic', '맑은 고딕', sans-serif; font-size:14px; line-height:1.6; z-index:99999999; box-shadow:0 4px 12px rgba(0,0,0,0.3); border-bottom:3px solid #7f1d1d; text-align:left;">
-  <div style="max-width:1100px; margin:0 auto;">
-    <div style="font-size:16px; font-weight:bold; margin-bottom:8px;">
-      ⚠️ [사내 정책] Microsoft Edge가 구형 Internet Explorer(IE) 모드로 실행되었습니다
-    </div>
-    <div style="margin-bottom:10px; color:#fee2e2;">
-      현재 주소(<strong>localhost</strong>)는 사내 보안/인트라넷 정책으로 인해 <strong>구형 IE 모드</strong>로 강제 전환되어 최신 UI 스타일(CSS) 및 화면이 차단된 상태입니다.
-    </div>
-    <div style="background-color:rgba(0,0,0,0.25); padding:12px 16px; border-radius:6px; margin-bottom:10px;">
-      <div style="font-weight:bold; font-size:15px; margin-bottom:4px;">
-        👉 해결 방법 1 (즉시 해결 - 강력 추천):
-        <a id="ie-redirect-link" href="http://127.0.0.1:8080/" style="color:#fde047; text-decoration:underline; font-weight:bold; font-size:15px; margin-left:6px;">
-          http://127.0.0.1:8080/ 링크를 클릭하세요 (사내 IE 모드 자동 우회)
-        </a>
-      </div>
-      <div style="font-size:12px; color:#fca5a5; margin-left:24px;">
-        * '127.0.0.1'은 마침표(.)가 포함된 IP 주소이므로 사내 Edge의 '인트라넷 IE 모드 전송 정책'을 우회하여 최신 Edge(Chromium) 엔진으로 정상 표시됩니다.
-      </div>
-    </div>
-    <div style="font-size:13px; color:#fecaca;">
-      👉 해결 방법 2: Edge 주소창 좌측의 <strong>파란색 [Internet Explorer] 아이콘</strong> 클릭 ➔ <strong>[Microsoft Edge에서 열기]</strong> 클릭
-    </div>
-  </div>
-</div>
-<script>
-  (function() {
-    var isIE = !!window.ActiveXObject || "ActiveXObject" in window || !!document.documentMode;
-    if (isIE) {
-      var banner = document.getElementById('ie-warning-banner');
-      if (banner) {
-        banner.style.display = 'block';
-      }
-      // If opened via 'localhost', automatically redirect to 127.0.0.1 once to bypass IE mode
-      if (window.location.hostname === 'localhost') {
-        try {
-          var redirected = window.sessionStorage && window.sessionStorage.getItem('ie_redirect_done');
-          if (!redirected) {
-            if (window.sessionStorage) {
-              window.sessionStorage.setItem('ie_redirect_done', '1');
-            }
-            var targetUrl = window.location.protocol + '//127.0.0.1:' + (window.location.port || '8080') + window.location.pathname + window.location.search + window.location.hash;
-            window.location.replace(targetUrl);
-          }
-        } catch(e) {}
-      }
-    }
-  })();
-</script>
-
 <div id="app">
   <!-- 1. Left Icon Rail (Plane Dark Rail) -->
   <aside class="plane-rail">
@@ -210,6 +160,6 @@
 </div>
 
 <!-- Vue 2 Application Script -->
-<script src="/js/app.js?v=2"></script>
+<script src="/js/app.js?v=3"></script>
 </body>
 </html>

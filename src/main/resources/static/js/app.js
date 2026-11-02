@@ -426,7 +426,77 @@ const FavoritesStore = Vue.observable({
 });
 
 // ========================================================
-// 3. Factory function for Modular Rail Views (c, i, f, o / C, I, F, O / favorites)
+// 3. Top Cascading Locations & Calendar Preset Constants
+// ========================================================
+const CASCADING_LOCATIONS = {
+  KR: {
+    name: "대한민국 (Korea)",
+    cities: [
+      { code: "ALL", name: "전체 (Select All)" },
+      { code: "SEOUL", name: "서울특별시" },
+      { code: "GYEONGGI", name: "경기도" },
+      { code: "BUSAN", name: "부산광역시" },
+      { code: "INCHEON", name: "인천광역시" },
+      { code: "DAEGU", name: "대구광역시" },
+      { code: "DAEJEON", name: "대전광역시" },
+      { code: "GWANGJU", name: "광주광역시" },
+      { code: "SEJONG", name: "세종특별자치시" }
+    ]
+  },
+  US: {
+    name: "미국 (USA)",
+    cities: [
+      { code: "ALL", name: "전체 (Select All)" },
+      { code: "CA", name: "캘리포니아 (CA)" },
+      { code: "NY", name: "뉴욕 (NY)" },
+      { code: "TX", name: "텍사스 (TX)" },
+      { code: "WA", name: "워싱턴 (WA)" },
+      { code: "IL", name: "일리노이 (IL)" },
+      { code: "MA", name: "매사추세츠 (MA)" }
+    ]
+  },
+  JP: {
+    name: "일본 (Japan)",
+    cities: [
+      { code: "ALL", name: "전체 (Select All)" },
+      { code: "TOKYO", name: "도쿄도 (Tokyo)" },
+      { code: "OSAKA", name: "오사카부 (Osaka)" },
+      { code: "KANAGAWA", name: "가나가와현 (Kanagawa)" },
+      { code: "KYOTO", name: "교토부 (Kyoto)" },
+      { code: "AICHI", name: "아이치현 (Aichi)" }
+    ]
+  },
+  DE: {
+    name: "독일 (Germany)",
+    cities: [
+      { code: "ALL", name: "전체 (Select All)" },
+      { code: "BERLIN", name: "베를린 (Berlin)" },
+      { code: "BAVARIA", name: "바이에른 (Bavaria)" },
+      { code: "HESSEN", name: "헤센 (Hessen)" },
+      { code: "HAMBURG", name: "함부르크 (Hamburg)" }
+    ]
+  },
+  UK: {
+    name: "영국 (UK)",
+    cities: [
+      { code: "ALL", name: "전체 (Select All)" },
+      { code: "LONDON", name: "런던 (Greater London)" },
+      { code: "SCOTLAND", name: "스코틀랜드 (Scotland)" },
+      { code: "WALES", name: "웨일스 (Wales)" },
+      { code: "MANCHESTER", name: "맨체스터 (Manchester)" }
+    ]
+  }
+};
+
+function formatLocalDateIso(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+// ========================================================
+// 4. Factory function for Modular Rail Views (c, i, f, o / C, I, F, O / favorites)
 // ========================================================
 function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
   return {
@@ -437,22 +507,35 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
         moduleTagline: moduleTagline,
         rawCategories: [],
         selectedModel: null,
-        activeSubTab: 'OVERVIEW',
+        activeSubTab: "OVERVIEW",
         hoveredCategory: null,
         flyoutTop: 120,
         flyoutTimer: null,
-        searchKeyword: '',
+        searchKeyword: "",
         isCategoryCollapsed: false,
-        
+
+        // Dedicated Favorites Direct Selection State
+        selectedFavItem: null,
+
+        // Top Filter Bar State (Cascading Combos & Calendar Pickers)
+        filterCountry: "KR",
+        filterCity: "ALL",
+        filterEnv: "ALL",
+        filterPeriod: "7DAYS",
+        filterStartDate: "",
+        filterEndDate: "",
+        filterValidationWarning: false,
+        filterSummaryText: "",
+
         // AUIGrid Columns
         gridColumns: [
-          { header: 'ID', key: 'id', width: '60px' },
-          { header: '항목명 (Name)', key: 'name', width: '180px' },
-          { header: '제공사 / 분류', key: 'provider', width: '140px' },
-          { header: '릴리즈 일자', key: 'releaseDate', width: '100px' },
-          { header: '규격 / 스펙', key: 'contextWindow', width: '120px' },
-          { header: '단가 / 요금제', key: 'pricingInput', width: '130px' },
-          { header: '상태 배지', key: 'badge', width: '100px', badge: true }
+          { header: "ID", key: "id", width: "60px" },
+          { header: "항목명 (Name)", key: "name", width: "180px" },
+          { header: "제공사 / 분류", key: "provider", width: "140px" },
+          { header: "릴리즈 일자", key: "releaseDate", width: "100px" },
+          { header: "규격 / 스펙", key: "contextWindow", width: "120px" },
+          { header: "단가 / 요금제", key: "pricingInput", width: "130px" },
+          { header: "상태 배지", key: "badge", width: "100px", badge: true }
         ],
 
         // CrossEditor Content Model
@@ -482,40 +565,6 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
     },
     computed: {
       categories() {
-        if (this.moduleKey === 'favorites') {
-          const items = FavoritesStore.list;
-          const map = new Map();
-          items.forEach(item => {
-            const cId = item.categoryId || 999;
-            if (!map.has(cId)) {
-              map.set(cId, {
-                id: cId,
-                slug: item.categorySlug || 'fav',
-                name: item.categoryName || item.provider || '즐겨찾기',
-                icon: item.categoryIcon || '★',
-                tagline: item.categoryTagline || '즐겨찾는 주요 메뉴',
-                models: []
-              });
-            }
-            const cat = map.get(cId);
-            if (!cat.models.some(m => m.modelKey === item.modelKey)) {
-              cat.models.push({
-                id: item.id,
-                modelKey: item.modelKey,
-                name: item.name,
-                badge: item.badge,
-                tagline: item.tagline,
-                provider: item.provider,
-                contextWindow: item.contextWindow,
-                pricingInput: item.pricingInput,
-                categoryId: cId,
-                categoryName: cat.name,
-                favSubTab: item.subTab
-              });
-            }
-          });
-          return Array.from(map.values());
-        }
         return this.rawCategories;
       },
       filteredCategories() {
@@ -537,6 +586,23 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
       favoriteList() {
         return FavoritesStore.list;
       },
+      filteredFavoriteItemsList() {
+        const list = FavoritesStore.list;
+        if (!this.searchKeyword.trim()) return list;
+        const kw = this.searchKeyword.toLowerCase();
+        return list.filter(f => 
+          (f.name && f.name.toLowerCase().includes(kw)) ||
+          (f.subTabTitle && f.subTabTitle.toLowerCase().includes(kw)) ||
+          (f.provider && f.provider.toLowerCase().includes(kw)) ||
+          (f.moduleKey && f.moduleKey.toLowerCase().includes(kw))
+        );
+      },
+      cityOptions() {
+        if (!this.filterCountry || !CASCADING_LOCATIONS[this.filterCountry]) {
+          return [{ code: "ALL", name: "전체 (Select All)" }];
+        }
+        return CASCADING_LOCATIONS[this.filterCountry].cities;
+      },
       currentSubContent() {
         if (!this.selectedModel) return null;
         if (this.selectedModel.contents && this.selectedModel.contents.length > 0) {
@@ -546,36 +612,72 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
         // Dynamic fallback generation for all items across all modules
         const m = this.selectedModel;
         const type = this.activeSubTab;
-        if (type === 'OVERVIEW') {
+        if (type === "OVERVIEW") {
           return {
             title: `${m.name} 소개 및 개요`,
-            contentBody: `### ${m.name}: ${m.tagline || '핵심 서비스 및 기술 사양'}\n\n- **제공자 / 분류**: ${m.provider}\n- **출시 / 등록일**: ${m.releaseDate}\n- **주요 규격 / 스펙**: ${m.contextWindow}\n- **단가 및 요금 정책**: ${m.pricingInput}\n\n${m.name}은(는) 해당 분야에서 널리 활용되는 대표적인 서비스로, 고성능 처리 엔진과 안정적인 인프라를 바탕으로 최적의 작업 효율을 제공합니다.`
+            contentBody: `### ${m.name}: ${m.tagline || "핵심 서비스 및 기술 사양"}
+
+- **제공자 / 분류**: ${m.provider}
+- **출시 / 등록일**: ${m.releaseDate}
+- **주요 규격 / 스펙**: ${m.contextWindow}
+- **단가 및 요금 정책**: ${m.pricingInput}
+
+${m.name}은(는) 해당 분야에서 널리 활용되는 대표적인 서비스로, 고성능 처리 엔진과 안정적인 인프라를 바탕으로 최적의 작업 효율을 제공합니다.`
           };
-        } else if (type === 'USAGE') {
+        } else if (type === "USAGE") {
           return {
             title: `${m.name} 주요 특징 & 사용법`,
-            contentBody: `### ${m.name} 핵심 활용 가이드\n\n1. **환경 설정**: 공식 API 키 발급 또는 서비스 엔드포인트 등록\n2. **연동 규격**: REST API / SDK / 웹 콘솔을 통한 표준 호출\n3. **모니터링**: 실시간 모니터링 시스템과 지표 동기화\n\n\`\`\`bash\n# ${m.name} 표준 연동 프로토콜\ncurl -X GET "https://api.example.com/${m.modelKey}/status" \\\n     -H "Authorization: Bearer YOUR_TOKEN"\n\`\`\``
+            contentBody: `### ${m.name} 핵심 활용 가이드
+
+1. **환경 설정**: 공식 API 키 발급 또는 서비스 엔드포인트 등록
+2. **연동 규격**: REST API / SDK / 웹 콘솔을 통한 표준 호출
+3. **모니터링**: 실시간 모니터링 시스템과 지표 동기화
+
+\`\`\`bash
+# ${m.name} 표준 연동 프로토콜
+curl -X GET "https://api.example.com/${m.modelKey}/status" \
+     -H "Authorization: Bearer YOUR_TOKEN"
+\`\`\``
           };
-        } else if (type === 'PROS_CONS') {
+        } else if (type === "PROS_CONS") {
           return {
             title: `${m.name} 장단점 비교 분석`,
-            contentBody: `### ${m.name} 장점 및 트레이드오프\n\n#### ✅ 핵심 강점\n- **뛰어난 안정성**: 높은 SLA 가용성 및 글로벌 CDN/클러스터 분산 지원\n- **풍부한 기능**: 엔터프라이즈 업무 워크플로우에 최적화된 편의성\n- **비용 최적화**: 경쟁력 있는 단가 및 사용량 기반 탄력적 요금제 (${m.pricingInput})\n\n#### ⚠️ 유의사항 및 한계\n- 대규모 동시 요청 시 트래픽 스로틀링(Rate Limiting) 정책 준수 필요\n- 사내 망 연동 시 프록시 및 방화벽 인바운드/아웃바운드 포트 확인 필요`
+            contentBody: `### ${m.name} 장점 및 트레이드오프
+
+#### ✅ 핵심 강점
+- **뛰어난 안정성**: 높은 SLA 가용성 및 글로벌 CDN/클러스터 분산 지원
+- **풍부한 기능**: 엔터프라이즈 업무 워크플로우에 최적화된 편의성
+- **비용 최적화**: 경쟁력 있는 단가 및 사용량 기반 탄력적 요금제 (${m.pricingInput})
+
+#### ⚠️ 유의사항 및 한계
+- 대규모 동시 요청 시 트래픽 스로틀링(Rate Limiting) 정책 준수 필요
+- 사내 망 연동 시 프록시 및 방화벽 인바운드/아웃바운드 포트 확인 필요`
           };
-        } else if (type === 'BENCHMARKS') {
+        } else if (type === "BENCHMARKS") {
           return {
             title: `${m.name} 벤치마크 및 성능 지표`,
-            contentBody: `### ${m.name} 성능 데이터\n\n- 스펙 사양: **${m.contextWindow}**\n- 출력 및 응답 용량: **${m.maxOutput}**\n- 상태 배지: **${m.badge}**\n\n*상세 비교 데이터는 '성능 분석 시트' 탭에서 확인하실 수 있습니다.*`
+            contentBody: `### ${m.name} 성능 데이터
+
+- 스펙 사양: **${m.contextWindow}**
+- 출력 및 응답 용량: **${m.maxOutput}**
+- 상태 배지: **${m.badge}**
+
+*상세 비교 데이터는 '성능 분석 시트' 탭에서 확인하실 수 있습니다.*`
           };
-        } else if (type === 'LINKS') {
+        } else if (type === "LINKS") {
           return {
             title: `${m.name} 공식 연결 링크`,
-            contentBody: `### ${m.name} 공식 리소스\n\n- 🌐 [공식 홈페이지 및 포털](https://www.google.com/search?q=${encodeURIComponent(m.name)})\n- 📖 [개발자 및 사용자 기술 문서](https://www.google.com/search?q=${encodeURIComponent(m.name + ' docs')})\n- 💬 [커뮤니티 및 지원 센터](https://www.google.com/search?q=${encodeURIComponent(m.name + ' community')})`
+            contentBody: `### ${m.name} 공식 리소스
+
+- 🌐 [공식 홈페이지 및 포털](https://www.google.com/search?q=${encodeURIComponent(m.name)})
+- 📖 [개발자 및 사용자 기술 문서](https://www.google.com/search?q=${encodeURIComponent(m.name + " docs")})
+- 💬 [커뮤니티 및 지원 센터](https://www.google.com/search?q=${encodeURIComponent(m.name + " community")})`
           };
         }
         return null;
       },
       renderedMarkdown() {
-        if (!this.currentSubContent || !this.currentSubContent.contentBody) return '';
+        if (!this.currentSubContent || !this.currentSubContent.contentBody) return "";
         try { return marked.parse(this.currentSubContent.contentBody); } catch (e) { return this.currentSubContent.contentBody; }
       }
     },
@@ -583,13 +685,112 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
       this.initData();
     },
     methods: {
+      initFilterDates() {
+        const today = new Date();
+        const past = new Date();
+        past.setDate(today.getDate() - 7);
+        this.filterStartDate = formatLocalDateIso(past);
+        this.filterEndDate = formatLocalDateIso(today);
+      },
+      onCountryChange() {
+        this.filterValidationWarning = false;
+        this.filterCity = "ALL";
+        this.applyFilter();
+      },
+      onPeriodPresetChange() {
+        const today = new Date();
+        if (this.filterPeriod === "TODAY") {
+          this.filterStartDate = formatLocalDateIso(today);
+          this.filterEndDate = formatLocalDateIso(today);
+        } else if (this.filterPeriod === "7DAYS") {
+          const past = new Date();
+          past.setDate(today.getDate() - 7);
+          this.filterStartDate = formatLocalDateIso(past);
+          this.filterEndDate = formatLocalDateIso(today);
+        } else if (this.filterPeriod === "30DAYS") {
+          const past = new Date();
+          past.setDate(today.getDate() - 30);
+          this.filterStartDate = formatLocalDateIso(past);
+          this.filterEndDate = formatLocalDateIso(today);
+        } else if (this.filterPeriod === "THIS_MONTH") {
+          const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+          this.filterStartDate = formatLocalDateIso(firstDay);
+          this.filterEndDate = formatLocalDateIso(today);
+        } else if (this.filterPeriod === "THIS_YEAR") {
+          const firstDay = new Date(today.getFullYear(), 0, 1);
+          this.filterStartDate = formatLocalDateIso(firstDay);
+          this.filterEndDate = formatLocalDateIso(today);
+        }
+        this.applyFilter();
+      },
+      onCustomDateChange() {
+        this.filterPeriod = "CUSTOM";
+        this.applyFilter();
+      },
+      applyFilter() {
+        if (!this.filterCountry) {
+          this.filterValidationWarning = true;
+          return;
+        }
+        this.filterValidationWarning = false;
+
+        const countryObj = CASCADING_LOCATIONS[this.filterCountry];
+        const countryName = countryObj ? countryObj.name : this.filterCountry;
+        let cityName = "전체 (Select All)";
+        if (countryObj && this.filterCity !== "ALL") {
+          const c = countryObj.cities.find(ci => ci.code === this.filterCity);
+          if (c) cityName = c.name;
+        }
+        const envMap = {
+          ALL: "전체 (Select All)",
+          PROD: "운영 (Production)",
+          STAGE: "검증 (Staging)",
+          DEV: "개발 (Development)",
+          MAINT: "점검 중 (Maintenance)"
+        };
+        const envName = envMap[this.filterEnv] || this.filterEnv;
+
+        this.filterSummaryText = `[국가: ${countryName}] · [시/도: ${cityName}] · [환경: ${envName}] · [기간: ${this.filterStartDate} ~ ${this.filterEndDate}]`;
+      },
+      resetFilter() {
+        this.filterCountry = "KR";
+        this.filterCity = "ALL";
+        this.filterEnv = "ALL";
+        this.filterPeriod = "7DAYS";
+        this.initFilterDates();
+        this.applyFilter();
+      },
+      async selectDirectFavorite(fav) {
+        if (!fav) return;
+        this.selectedFavItem = fav;
+        this.activeSubTab = fav.subTab || "OVERVIEW";
+        await this.selectModel(fav.modelKey);
+      },
+      removeDirectFavorite(fav) {
+        const isCurrent = this.selectedFavItem && 
+          this.selectedFavItem.modelKey === fav.modelKey && 
+          this.selectedFavItem.subTab === fav.subTab;
+
+        FavoritesStore.toggleFavorite(fav, null, fav.moduleKey, fav.subTab);
+
+        if (isCurrent) {
+          this.$nextTick(() => {
+            if (this.favoriteList.length > 0) {
+              this.selectDirectFavorite(this.favoriteList[0]);
+            } else {
+              this.selectedFavItem = null;
+              this.selectedModel = null;
+            }
+          });
+        }
+      },
       async initData() {
+        this.initFilterDates();
+        this.applyFilter();
         try {
-          if (this.moduleKey === 'favorites') {
-            if (this.allModels.length > 0) {
-              const first = this.allModels[0];
-              await this.selectModel(first.modelKey);
-              if (first.favSubTab) this.activeSubTab = first.favSubTab;
+          if (this.moduleKey === "favorites") {
+            if (this.favoriteList.length > 0) {
+              await this.selectDirectFavorite(this.favoriteList[0]);
             }
             return;
           }
@@ -605,6 +806,7 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
         }
       },
       showCategoryFlyout(cat, event) {
+        if (this.moduleKey === "favorites") return;
         if (this.flyoutTimer) clearTimeout(this.flyoutTimer);
         if (event && event.currentTarget) {
           const rect = event.currentTarget.getBoundingClientRect();
@@ -626,7 +828,7 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
           const res = await fetch(`/api/models/${modelKey}`);
           if (res.ok) {
             this.selectedModel = await res.json();
-            if (!this.activeSubTab) this.activeSubTab = 'OVERVIEW';
+            if (!this.activeSubTab) this.activeSubTab = "OVERVIEW";
           }
         } catch (e) {
           console.error(e);
@@ -642,12 +844,12 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
       },
       getSubTabTitle(tabKey) {
         const titles = {
-          'OVERVIEW': '소개 및 개요',
-          'USAGE': '주요 특징 & 사용법',
-          'BENCHMARKS': '성능 분석 시트 (AUIGrid)',
-          'CROSS_EDITOR': '운영 가이드 (CrossEditor)',
-          'PROS_CONS': '장단점 비교',
-          'LINKS': '공식 링크'
+          OVERVIEW: "소개 및 개요",
+          USAGE: "주요 특징 & 사용법",
+          BENCHMARKS: "성능 분석 시트 (AUIGrid)",
+          CROSS_EDITOR: "운영 가이드 (CrossEditor)",
+          PROS_CONS: "장단점 비교",
+          LINKS: "공식 링크"
         };
         return titles[tabKey] || tabKey;
       },
@@ -660,16 +862,17 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
         const cat = this.categories.find(c => c.id === model.categoryId) || {
           id: model.categoryId,
           name: model.categoryName || model.provider,
-          icon: '★'
+          icon: "★"
         };
         FavoritesStore.toggleFavorite(model, cat, this.moduleKey, subTab);
-        if (this.moduleKey === 'favorites') {
+        if (this.moduleKey === "favorites") {
           this.$nextTick(() => {
-            if (this.allModels.length > 0) {
-              if (!this.selectedModel || !this.allModels.some(m => m.modelKey === this.selectedModel.modelKey)) {
-                this.selectModel(this.allModels[0].modelKey);
+            if (this.favoriteList.length > 0) {
+              if (!this.selectedFavItem || !this.favoriteList.some(f => f.modelKey === this.selectedFavItem.modelKey && f.subTab === this.selectedFavItem.subTab)) {
+                this.selectDirectFavorite(this.favoriteList[0]);
               }
             } else {
+              this.selectedFavItem = null;
               this.selectedModel = null;
             }
           });
@@ -692,12 +895,54 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
           <div class="plane-search-box">
             <div class="plane-search-input-wrapper">
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-              <input type="text" class="plane-search-input" v-model="searchKeyword" placeholder="검색...">
+              <input type="text" class="plane-search-input" v-model="searchKeyword" :placeholder="moduleKey === 'favorites' ? '즐겨찾기 메뉴 검색...' : '카테고리 검색...'">
             </div>
           </div>
 
-          <!-- Categories Section with Collapse/Expand Toggle (대메뉴 접고 펴기) -->
-          <div class="plane-nav-section">
+          <!-- CASE 1: Favorites Mode -> Flat Direct List (NO Category Tree, NO Hover Flyout) -->
+          <div class="plane-nav-section" v-if="moduleKey === 'favorites'">
+            <div class="plane-nav-section-title">
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span style="color:#eab308; font-size:14px;">⭐</span>
+                <span>즐겨찾기 메뉴 목록</span>
+              </div>
+              <span class="plane-collapse-badge" style="background:#fef08a; color:#854d0e;">
+                {{ filteredFavoriteItemsList.length }}개
+              </span>
+            </div>
+
+            <ul class="plane-fav-direct-list">
+              <li v-for="item in filteredFavoriteItemsList" 
+                  :key="item.modelKey + '-' + item.subTab"
+                  class="plane-fav-direct-item"
+                  :class="{ active: selectedFavItem && selectedFavItem.modelKey === item.modelKey && selectedFavItem.subTab === item.subTab }"
+                  @click="selectDirectFavorite(item)">
+                <div class="plane-fav-star-icon">★</div>
+                <div class="plane-fav-item-body">
+                  <div class="plane-fav-item-title">{{ item.name }}</div>
+                  <div class="plane-fav-item-subtab-row">
+                    <span class="plane-fav-subtab-badge">{{ item.subTabTitle }}</span>
+                    <span class="plane-fav-module-badge">{{ (item.moduleKey || 'c').toUpperCase() }}-TTTM</span>
+                  </div>
+                </div>
+                <button class="plane-fav-remove-btn" 
+                        @click.stop="removeDirectFavorite(item)" 
+                        title="즐겨찾기 삭제">
+                  &times;
+                </button>
+              </li>
+              <li v-if="filteredFavoriteItemsList.length === 0" class="plane-fav-empty">
+                <div style="font-size:22px; margin-bottom:8px;">⭐</div>
+                <div style="font-weight:600; font-size:13px; color:#475569;">등록된 즐겨찾기가 없습니다.</div>
+                <div style="font-size:11.5px; color:#94a3b8; margin-top:4px; line-height:1.4;">
+                  각 화면의 별표(★)를 눌러 자주 찾는 메뉴를 등록하세요.
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <!-- CASE 2: Normal Module Mode -> Multi-Level Category Nav with Hover Flyout -->
+          <div class="plane-nav-section" v-else>
             <div class="plane-nav-section-title" @click="isCategoryCollapsed = !isCategoryCollapsed" style="cursor:pointer; user-select:none;">
               <div style="display:flex; align-items:center; gap:6px;">
                 <svg :style="{ transform: isCategoryCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)', transition: 'transform 0.18s ease' }" 
@@ -705,7 +950,7 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
                      fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                 </svg>
-                <span>{{ moduleKey === 'favorites' ? '즐겨찾기 대메뉴' : '카테고리' }}</span>
+                <span>카테고리</span>
               </div>
               <span class="plane-collapse-badge">
                 {{ isCategoryCollapsed ? '펼치기' : '접기' }}
@@ -737,9 +982,9 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
           </div>
         </aside>
 
-        <!-- Compact Tree Flyout Portal -->
+        <!-- Compact Tree Flyout Portal: ONLY for normal modules, NOT for favorites! -->
         <div class="plane-tree-flyout-portal" 
-             v-if="hoveredCategory" 
+             v-if="moduleKey !== 'favorites' && hoveredCategory" 
              :style="{ top: flyoutTop + 'px', left: '326px' }"
              @mouseenter="keepCategoryFlyout" 
              @mouseleave="hideCategoryFlyout">
@@ -803,15 +1048,169 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
             <div class="plane-breadcrumbs">
               <span>{{ moduleTitle }}</span>
               <span>&gt;</span>
-              <span v-if="selectedModel">{{ selectedModel.name }}</span>
+              <span v-if="moduleKey === 'favorites' && selectedFavItem">{{ selectedFavItem.name }}</span>
+              <span v-else-if="selectedModel">{{ selectedModel.name }}</span>
               <span>&gt;</span>
-              <span class="crumb-active" v-if="selectedModel">{{ getSubTabTitle(activeSubTab) }}</span>
+              <span class="crumb-active" v-if="moduleKey === 'favorites' && selectedFavItem">{{ selectedFavItem.subTabTitle }}</span>
+              <span class="crumb-active" v-else-if="selectedModel">{{ getSubTabTitle(activeSubTab) }}</span>
             </div>
           </header>
 
           <div class="plane-content-body">
+            <!-- 1. Top Filter & Cascading Combo Control Bar (화면마다 상단 콤보 & 캘린더) -->
+            <div class="plane-filter-bar">
+              <div class="plane-filter-row">
+                <!-- Cascading Combo 1: 국가 (Country) - Required Selection with * and Badge -->
+                <div class="plane-filter-group" :class="{ 'has-error': filterValidationWarning }">
+                  <label class="plane-filter-label">
+                    <span>국가 (Country)</span>
+                    <span class="plane-req-star">*</span>
+                    <span class="plane-req-badge">필수</span>
+                  </label>
+                  <select class="plane-filter-select" v-model="filterCountry" @change="onCountryChange">
+                    <option value="" disabled>-- 국가 선택 (필수) --</option>
+                    <option value="KR">대한민국 (Korea)</option>
+                    <option value="US">미국 (USA)</option>
+                    <option value="JP">일본 (Japan)</option>
+                    <option value="DE">독일 (Germany)</option>
+                    <option value="UK">영국 (UK)</option>
+                  </select>
+                </div>
+
+                <!-- Cascading Combo 2: 시/도 (City/State) - Linked with Country + Select All Option -->
+                <div class="plane-filter-group">
+                  <label class="plane-filter-label">
+                    <span>시/도 (City/State)</span>
+                    <span class="plane-all-badge">Select All 지원</span>
+                  </label>
+                  <select class="plane-filter-select" v-model="filterCity" @change="applyFilter">
+                    <option v-for="c in cityOptions" :key="c.code" :value="c.code">
+                      {{ c.name }}
+                    </option>
+                  </select>
+                </div>
+
+                <!-- Combo 3: 운영 환경 / 상태 (Environment) - with Select All Option -->
+                <div class="plane-filter-group">
+                  <label class="plane-filter-label">
+                    <span>운영 환경 / 상태</span>
+                    <span class="plane-all-badge">Select All 지원</span>
+                  </label>
+                  <select class="plane-filter-select" v-model="filterEnv" @change="applyFilter">
+                    <option value="ALL">전체 (Select All)</option>
+                    <option value="PROD">운영 (Production)</option>
+                    <option value="STAGE">검증 (Staging)</option>
+                    <option value="DEV">개발 (Development)</option>
+                    <option value="MAINT">점검 중 (Maintenance)</option>
+                  </select>
+                </div>
+
+                <!-- Combo 4: 조회 기간 콤보 & 캘린더 날짜 선택 (Calendar Date Pickers) -->
+                <div class="plane-filter-group plane-filter-group-date">
+                  <label class="plane-filter-label">
+                    <span>조회 기간 (Calendar)</span>
+                    <span style="font-size:11px; color:#2563eb; font-weight:normal;">📅 캘린더 연동</span>
+                  </label>
+                  <div class="plane-date-control-wrap">
+                    <!-- Preset Combo -->
+                    <select class="plane-filter-select plane-period-select" v-model="filterPeriod" @change="onPeriodPresetChange">
+                      <option value="TODAY">오늘 (Today)</option>
+                      <option value="7DAYS">최근 7일 (Last 7 Days)</option>
+                      <option value="30DAYS">최근 30일 (Last 30 Days)</option>
+                      <option value="THIS_MONTH">이번 달 (This Month)</option>
+                      <option value="THIS_YEAR">올해 (This Year)</option>
+                      <option value="CUSTOM">직접 선택 (Calendar Custom)</option>
+                    </select>
+                    
+                    <!-- Calendar Date Pickers -->
+                    <div class="plane-date-inputs">
+                      <input type="date" 
+                             class="plane-date-input" 
+                             v-model="filterStartDate" 
+                             @change="onCustomDateChange"
+                             title="시작일 선택">
+                      <span class="plane-date-separator">~</span>
+                      <input type="date" 
+                             class="plane-date-input" 
+                             v-model="filterEndDate" 
+                             @change="onCustomDateChange"
+                             title="종료일 선택">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Filter Actions: Search & Reset Buttons -->
+                <div class="plane-filter-actions">
+                  <button class="plane-filter-search-btn" @click="applyFilter" title="조건으로 조회">
+                    <svg style="width:14px; height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <span>조회</span>
+                  </button>
+                  <button class="plane-filter-reset-btn" @click="resetFilter" title="조건 초기화">
+                    <svg style="width:14px; height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    <span>초기화</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Validation Warning Alert -->
+              <div v-if="filterValidationWarning" class="plane-filter-warning-msg">
+                ⚠️ <strong>필수 선택 오류:</strong> [국가]는 필수 선택 항목입니다. 국가를 선택한 후 조회해 주십시오.
+              </div>
+
+              <!-- Applied Filter Summary Status Bar -->
+              <div v-if="filterSummaryText && !filterValidationWarning" class="plane-filter-summary-row">
+                <span class="plane-filter-applied-badge">적용된 조회 조건</span>
+                <span class="plane-filter-summary-text">{{ filterSummaryText }}</span>
+              </div>
+            </div>
+
+            <!-- 2. Sub-menu Tabs / Favorites Single-View Bar -->
+            <!-- In Favorites Mode: Single-Menu Indicator (NO Tree sibling tabs!) -->
+            <div class="plane-fav-single-tab-bar" v-if="moduleKey === 'favorites' && selectedFavItem">
+              <span class="plane-fav-active-badge">⭐ 즐겨찾기 단독 화면</span>
+              <span class="plane-fav-active-label">{{ selectedFavItem.name }} &gt; {{ selectedFavItem.subTabTitle }}</span>
+            </div>
+
+            <!-- In Normal Mode: Multi-tab navigation (소개 및 개요, 주요 특징, 성능 분석 시트, 운영 가이드, 장단점, 공식 링크) -->
+            <div class="plane-model-nav" v-else-if="selectedModel">
+              <button class="plane-model-nav-btn" 
+                      :class="{ active: activeSubTab === 'OVERVIEW' }" 
+                      @click="activeSubTab = 'OVERVIEW'">
+                📌 소개 및 개요
+              </button>
+              <button class="plane-model-nav-btn" 
+                      :class="{ active: activeSubTab === 'USAGE' }" 
+                      @click="activeSubTab = 'USAGE'">
+                💡 주요 특징 &amp; 사용법
+              </button>
+              <button class="plane-model-nav-btn" 
+                      :class="{ active: activeSubTab === 'BENCHMARKS' }" 
+                      @click="activeSubTab = 'BENCHMARKS'">
+                📊 성능 분석 시트 (AUIGrid)
+              </button>
+              <button class="plane-model-nav-btn" 
+                      :class="{ active: activeSubTab === 'CROSS_EDITOR' }" 
+                      @click="activeSubTab = 'CROSS_EDITOR'">
+                📝 운영 가이드 (CrossEditor)
+              </button>
+              <button class="plane-model-nav-btn" 
+                      :class="{ active: activeSubTab === 'PROS_CONS' }" 
+                      @click="activeSubTab = 'PROS_CONS'">
+                ⚖️ 장단점 비교
+              </button>
+              <button class="plane-model-nav-btn" 
+                      :class="{ active: activeSubTab === 'LINKS' }" 
+                      @click="activeSubTab = 'LINKS'">
+                🔗 공식 링크
+              </button>
+            </div>
+
+            <!-- 3. Screen Content Section -->
             <section v-if="selectedModel">
-              
               <!-- Sub-menu 1: AUIGrid Component View -->
               <div v-if="activeSubTab === 'BENCHMARKS'" class="plane-card">
                 <div style="margin-bottom:14px; display:flex; align-items:flex-start; gap:10px;">
@@ -830,7 +1229,7 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
                     </p>
                   </div>
                 </div>
-                <aui-grid :title="selectedModel.name + ' 성능 분석 시트'" :columns="gridColumns" :rows="allModels" />
+                <aui-grid :title="selectedModel.name + ' 성능 분석 시트'" :columns="gridColumns" :rows="allModels.length ? allModels : [selectedModel]" />
               </div>
 
               <!-- Sub-menu 2: CrossEditor Component View -->
@@ -942,21 +1341,20 @@ function createModuleComponent(moduleKey, moduleTitle, moduleTagline) {
                 </h2>
                 <div class="markdown-body" v-html="renderedMarkdown"></div>
               </div>
-              <div v-else class="plane-card">
-                <h3>{{ getSubTabTitle(activeSubTab) }}</h3>
-                <p style="color:#64748b;">선택된 항목의 상세 가이드가 준비되어 있습니다.</p>
-              </div>
-
             </section>
-            
-            <!-- Empty state for Favorites when no items are starred -->
+
+            <!-- Empty state when no items exist -->
             <section v-else class="plane-card" style="text-align:center; padding:60px 20px;">
               <div style="font-size:48px; margin-bottom:14px; color:#f59e0b;">★</div>
-              <h3 style="font-size:18px; font-weight:700; color:#1e293b; margin-bottom:8px;">등록된 즐겨찾기 메뉴가 없습니다</h3>
+              <h3 style="font-size:18px; font-weight:700; color:#1e293b; margin-bottom:8px;">
+                {{ moduleKey === 'favorites' ? '등록된 즐겨찾기 메뉴가 없습니다' : '표시할 데이터가 없습니다' }}
+              </h3>
               <p style="color:#64748b; font-size:13.5px; max-width:440px; margin:0 auto 20px auto; line-height:1.6;">
-                각 세부 메뉴 페이지의 제목 왼쪽에 위치한 별표(☆)를 누르면 언제든지 이 곳에서 즐겨찾기 대메뉴로 빠르게 모아볼 수 있습니다.
+                {{ moduleKey === 'favorites' 
+                   ? '각 화면에서 제목 왼쪽의 별표(★)를 누르면 언제든지 이 곳에서 정확히 해당 메뉴만 모아볼 수 있습니다.' 
+                   : '좌측 메뉴에서 항목을 선택해 주십시오.' }}
               </p>
-              <button class="plane-btn plane-btn-primary" @click="$root.selectRailItem('c')">
+              <button v-if="moduleKey === 'favorites'" class="plane-btn plane-btn-primary" @click="$root.selectRailItem('c')">
                 <span>⚡ Frontier LLM Hub 둘러보기</span>
               </button>
             </section>

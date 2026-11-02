@@ -981,3 +981,345 @@ body {
   color: #2563eb;
   font-weight: 700;
 }
+
+/* ======================================================== */
+/* 7. Enterprise Top Filter & Cascading Combo Control Bar   */
+/* ======================================================== */
+.plane-filter-bar {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.plane-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.plane-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.plane-filter-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.plane-req-star {
+  color: #ef4444;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.plane-req-badge {
+  background: #fee2e2;
+  color: #dc2626;
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.3px;
+}
+
+.plane-all-badge {
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: 9.5px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.plane-filter-select {
+  height: 34px;
+  padding: 4px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background-color: #f8fafc;
+  font-size: 13px;
+  color: #0f172a;
+  outline: none;
+  cursor: pointer;
+  min-width: 140px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.plane-filter-select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+  background-color: #ffffff;
+}
+
+.plane-filter-group.has-error .plane-filter-select {
+  border-color: #ef4444;
+  background-color: #fff1f2;
+}
+
+.plane-filter-group-date {
+  flex-grow: 1;
+  min-width: 320px;
+}
+
+.plane-date-control-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.plane-period-select {
+  min-width: 130px;
+}
+
+.plane-date-inputs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.plane-date-input {
+  height: 34px;
+  padding: 4px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background-color: #f8fafc;
+  font-size: 12.5px;
+  color: #0f172a;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.15s ease;
+}
+
+.plane-date-input:focus {
+  border-color: #3b82f6;
+  background-color: #ffffff;
+}
+
+.plane-date-separator {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.plane-filter-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.plane-filter-search-btn {
+  height: 34px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  background-color: #2563eb;
+  color: #ffffff;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.plane-filter-search-btn:hover {
+  background-color: #1d4ed8;
+}
+
+.plane-filter-reset-btn {
+  height: 34px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  background-color: #f1f5f9;
+  color: #475569;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.plane-filter-reset-btn:hover {
+  background-color: #e2e8f0;
+}
+
+.plane-filter-warning-msg {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background-color: #fef2f2;
+  border-left: 3px solid #ef4444;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #b91c1c;
+}
+
+.plane-filter-summary-row {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.plane-filter-applied-badge {
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.plane-filter-summary-text {
+  color: #334155;
+  font-weight: 500;
+}
+
+/* ======================================================== */
+/* 8. Dedicated Favorites View & Sidebar Styling            */
+/* ======================================================== */
+.plane-fav-direct-list {
+  list-style: none;
+  padding: 0 8px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.plane-fav-direct-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  background-color: transparent;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.plane-fav-direct-item:hover {
+  background-color: #f1f5f9;
+}
+
+.plane-fav-direct-item.active {
+  background-color: #e0f2fe;
+  border-left: 3px solid #0284c7;
+}
+
+.plane-fav-star-icon {
+  color: #eab308;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.plane-fav-item-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.plane-fav-item-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plane-fav-item-subtab-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 3px;
+}
+
+.plane-fav-subtab-badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #2563eb;
+  background: #eff6ff;
+  padding: 1px 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plane-fav-module-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.plane-fav-remove-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  line-height: 1;
+  opacity: 0.6;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.plane-fav-remove-btn:hover {
+  opacity: 1;
+  color: #ef4444;
+  background: #fee2e2;
+}
+
+.plane-fav-empty {
+  padding: 30px 16px;
+  text-align: center;
+  color: #64748b;
+}
+
+.plane-fav-single-tab-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fefce8;
+  border: 1px solid #fef08a;
+  border-radius: 6px;
+  padding: 8px 14px;
+  margin-bottom: 16px;
+}
+
+.plane-fav-active-badge {
+  background: #eab308;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.plane-fav-active-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #713f12;
+}

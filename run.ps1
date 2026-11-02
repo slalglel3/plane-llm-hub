@@ -88,8 +88,7 @@ $jarPath = Join-Path $PSScriptRoot "plane-llm-hub-1.0.0.jar"
 if (Test-Path $jarPath) {
     Write-Host "[INFO] 사전 빌드된 단일 Fat JAR (plane-llm-hub-1.0.0.jar) 감지됨." -ForegroundColor Green
     Write-Host "[INFO] Maven/Nexus 다운로드 없이 Java 단독으로 즉시 기동합니다..." -ForegroundColor Cyan
-    Write-Host "[INFO] 브라우저 접속: http://127.0.0.1:8080/ (추천: 사내 Edge IE 모드 우회)" -ForegroundColor Green
-    Write-Host "[INFO] 또는: http://localhost:8080/" -ForegroundColor Gray
+    Write-Host "[INFO] 브라우저 접속: http://localhost:8080/ (or http://127.0.0.1:8080/)" -ForegroundColor Green
     Write-Host "------------------------------------------------------------------" -ForegroundColor Cyan
     Write-Host ""
     & "$validJavaHome\bin\java.exe" -jar $jarPath
@@ -112,8 +111,7 @@ if ($mvnCmd) {
 }
 
 Write-Host "[INFO] Starting Spring Boot Application on port 8080..." -ForegroundColor Cyan
-Write-Host "[INFO] Once started, access: http://127.0.0.1:8080/ (추천: 사내 Edge IE 모드 우회)" -ForegroundColor Green
-Write-Host "[INFO] Or: http://localhost:8080/" -ForegroundColor Gray
+Write-Host "[INFO] Once started, access: http://localhost:8080/ (or http://127.0.0.1:8080/)" -ForegroundColor Green
 Write-Host "------------------------------------------------------------------" -ForegroundColor Cyan
 Write-Host ""
 
