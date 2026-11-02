@@ -21,6 +21,15 @@ fi
 JAVA_VER=$(java -version 2>&1 | head -n 1 | awk -F '"' '{print $2}')
 echo "[INFO] Detected Java version: $JAVA_VER"
 
+# Check if pre-built standalone JAR exists
+if [ -f "./plane-llm-hub-1.0.0.jar" ]; then
+    echo "[INFO] 사전 빌드된 단일 Fat JAR (plane-llm-hub-1.0.0.jar) 감지됨."
+    echo "[INFO] Maven/Nexus 다운로드 과정 없이 Java 단독으로 즉시 기동합니다..."
+    echo "[INFO] 서버 기동 완료 후 브라우저 접속: http://localhost:8080"
+    echo "------------------------------------------------------------------"
+    exec java -jar ./plane-llm-hub-1.0.0.jar
+fi
+
 # Make mvnw executable if needed
 if [ -f "./mvnw" ]; then
     chmod +x ./mvnw

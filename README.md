@@ -56,6 +56,7 @@
 
 ```
 plane-llm-hub/
+├── plane-llm-hub-1.0.0.jar               # [핵심] 사전 빌드된 단일 Fat JAR (Nexus 없이 즉시 실행 가능)
 ├── mvnw / mvnw.cmd                       # Maven Wrapper (Linux/macOS/Windows)
 ├── run.sh                                # Linux / macOS 원클릭 실행 스크립트
 ├── run.bat                               # Windows CMD 원클릭 실행 스크립트
@@ -102,7 +103,16 @@ plane-llm-hub/
 
 ---
 
-### 방법 1. 원클릭 실행 스크립트 (가장 추천)
+### 방법 1. 원클릭 실행 스크립트 (가장 추천 - 폐쇄망/Nexus 무관 1초 실행)
+
+프로젝트 루트에 모든 라이브러리와 프론트엔드가 포함된 **`plane-llm-hub-1.0.0.jar`가 기본 내장**되어 있으므로, 사내 폐쇄망에서 Maven이나 Nexus 연결 없이도 Java만 있으면 1초 만에 즉시 실행됩니다.
+
+#### 🪟 Windows (사내 업무용 PC)
+1. **GitHub에서 ZIP 다운로드** (또는 `git clone`):
+   - GitHub 상단의 초록색 **`Code` ➔ `Download ZIP`** 버튼을 눌러 압축을 내려받고 압축을 해제합니다.
+2. 탐색기에서 **`run.bat`** 파일을 더블클릭합니다.
+   - 스크립트가 내장된 `plane-llm-hub-1.0.0.jar`를 자동 감지하여 Maven/Nexus 다운로드 없이 Java로 즉시 서버를 구동합니다!
+   - *(PowerShell 콘솔을 이용하시는 경우 `.\run.ps1`을 입력하셔도 됩니다.)*
 
 #### 🐧 Linux / 🍎 macOS
 터미널에서 아래 명령어를 실행합니다:
@@ -112,22 +122,6 @@ cd plane-llm-hub
 chmod +x run.sh
 ./run.sh
 ```
-
-#### 🪟 Windows
-1. 레포지토리를 클론합니다:
-   ```cmd
-   git clone https://github.com/slalglel3/plane-llm-hub.git
-   cd plane-llm-hub
-   ```
-2. 탐색기에서 **`run.bat`** 파일을 더블클릭하거나 콘솔에서 실행합니다:
-   - **명령 프롬프트 (CMD)**:
-     ```cmd
-     run.bat
-     ```
-   - **PowerShell**:
-     ```powershell
-     .\run.ps1
-     ```
 
 ---
 

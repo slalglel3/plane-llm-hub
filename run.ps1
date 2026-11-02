@@ -92,6 +92,9 @@ if (Test-Path $jarPath) {
     Write-Host "------------------------------------------------------------------" -ForegroundColor Cyan
     Write-Host ""
     & "$validJavaHome\bin\java.exe" -jar $jarPath
+    Write-Host ""
+    Write-Host "[INFO] 서버 프로세스가 종료되었습니다." -ForegroundColor Yellow
+    Read-Host "엔터를 누르면 종료합니다..."
     exit $LASTEXITCODE
 }
 

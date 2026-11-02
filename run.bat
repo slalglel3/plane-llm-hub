@@ -95,7 +95,11 @@ if exist "plane-llm-hub-1.0.0.jar" (
     echo ------------------------------------------------------------------
     echo.
     "%JAVA_HOME%\bin\java.exe" -jar plane-llm-hub-1.0.0.jar
-    if !ERRORLEVEL! NEQ 0 pause
+    echo.
+    echo ==================================================================
+    echo [INFO] 서버 프로세스가 종료되었습니다.
+    echo ==================================================================
+    pause
     exit /b !ERRORLEVEL!
 )
 
